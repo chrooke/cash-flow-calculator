@@ -5,42 +5,51 @@ import transaction
 
 
 class TestTransaction(unittest.TestCase):
+
     def setUp(self):
         self.once_today = transaction.Transaction(
             start=date.today(),
             description="Once, today",
             amt=1.00,
-            frequency="O")
+            frequency=transaction.Transaction.ONCE)
         self.once_two_days = transaction.Transaction(
             start=date.today()+timedelta(days=2),
             description="Once, in two days",
             amt=1.01,
-            frequency="O")
+            frequency=transaction.Transaction.ONCE)
         self.weekly = transaction.Transaction(
             start=date.today(),
             description="Weekly",
             amt=1.02,
-            frequency="W")
+            frequency=transaction.Transaction.WEEKLY)
         self.biweekly = transaction.Transaction(
             start=date.today(),
             description="Biweekly",
             amt=1.03,
-            frequency="2W")
+            frequency=transaction.Transaction.BIWEEKLY)
         self.monthly = transaction.Transaction(
             start=date.today(),
             description="Monthly",
             amt=1.04,
-            frequency="M")
+            frequency=transaction.Transaction.MONTHLY)
         self.quarterly = transaction.Transaction(
             start=date.today(),
             description="Quarterly",
             amt=1.05,
-            frequency="Q")
+            frequency=transaction.Transaction.QUARTERLY)
         self.annually = transaction.Transaction(
             start=date.today(),
             description="Biweekly",
             amt=1.06,
-            frequency="A")
+            frequency=transaction.Transaction.ANNUALLY)
+
+    def test_class_constants(self):
+        self.assertEqual(transaction.Transaction.ONCE, "O")
+        self.assertEqual(transaction.Transaction.WEEKLY, "W")
+        self.assertEqual(transaction.Transaction.BIWEEKLY, "2W")
+        self.assertEqual(transaction.Transaction.MONTHLY, "M")
+        self.assertEqual(transaction.Transaction.QUARTERLY, "Q")
+        self.assertEqual(transaction.Transaction.ANNUALLY, "A")
 
     def test_constructor_empty(self):
         self.t = transaction.Transaction()
@@ -53,7 +62,7 @@ class TestTransaction(unittest.TestCase):
         self.assertIsInstance(self.t.amount, float)
         self.assertEqual(self.t.amount, 0.0)
         self.assertIsInstance(self.t.frequency, str)
-        self.assertEqual(self.t.frequency, "O")
+        self.assertEqual(self.t.frequency, transaction.Transaction.ONCE)
         self.assertEqual(len(self.t.skip_list), 0)
 
     def test_constructor_full(self):
@@ -62,7 +71,7 @@ class TestTransaction(unittest.TestCase):
         stop_date = start_date.replace(month=start_date.month+1)
         descr = "Test transaction"
         amt = 1.00
-        freq = "W"
+        freq = transaction.Transaction.WEEKLY
         self.t = transaction.Transaction(
             start=start_date,
             end=stop_date,
