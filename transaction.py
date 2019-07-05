@@ -15,7 +15,7 @@ class Transaction(object):
     def __init__(self, start=date.today(), end=None, description="",
                  amt=0.00, frequency=None, skip=[]):
         self.start_date = start
-        self.stop_date = end
+        self.end_date = end
         self.description = description
         self.amount = amt
         if frequency is None:
@@ -37,7 +37,7 @@ class Transaction(object):
                 return self.amount
             if date > trans_date:
                 return 0
-            if self.stop_date and trans_date > self.stop_date:
+            if self.end_date and trans_date > self.end_date:
                 return 0
             if self.frequency == Transaction.ONCE:
                 return 0

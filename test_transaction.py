@@ -57,7 +57,7 @@ class TestTransaction(unittest.TestCase):
         self.assertIsInstance(self.t, transaction.Transaction)
         self.assertIsInstance(self.t.start_date, date)
         self.assertEqual(self.t.start_date, date.today())
-        self.assertIsNone(self.t.stop_date)
+        self.assertIsNone(self.t.end_date)
         self.assertIsInstance(self.t.description, str)
         self.assertEqual(self.t.description, "")
         self.assertIsInstance(self.t.amount, float)
@@ -69,13 +69,13 @@ class TestTransaction(unittest.TestCase):
     def test_constructor_full(self):
         start_date = date.today()
         skip_date = start_date + timedelta(days=14)
-        stop_date = start_date.replace(month=start_date.month+1)
+        end_date = start_date.replace(month=start_date.month+1)
         descr = "Test transaction"
         amt = 1.00
         freq = transaction.Transaction.WEEKLY
         self.t = transaction.Transaction(
             start=start_date,
-            end=stop_date,
+            end=end_date,
             description=descr,
             amt=amt,
             frequency=freq,
@@ -83,8 +83,8 @@ class TestTransaction(unittest.TestCase):
         self.assertIsInstance(self.t, transaction.Transaction)
         self.assertIsInstance(self.t.start_date, date)
         self.assertEqual(self.t.start_date, start_date)
-        self.assertIsInstance(self.t.stop_date, date)
-        self.assertEqual(self.t.stop_date, stop_date)
+        self.assertIsInstance(self.t.end_date, date)
+        self.assertEqual(self.t.end_date, end_date)
         self.assertIsInstance(self.t.description, str)
         self.assertEqual(self.t.description, descr)
         self.assertIsInstance(self.t.amount, float)
@@ -131,8 +131,8 @@ class TestTransaction(unittest.TestCase):
         d = date.today()+timedelta(days=14)
         self.assertEqual(self.weekly.amtOn(d), 1.02)
 
-    def test_weekly_recurrence_with_stop_date(self):
-        self.weekly.stop_date = date.today()+timedelta(days=8)
+    def test_weekly_recurrence_with_end_date(self):
+        self.weekly.end_date = date.today()+timedelta(days=8)
 
         d = date.today()
         self.assertEqual(self.weekly.amtOn(d), 1.02)
@@ -169,8 +169,8 @@ class TestTransaction(unittest.TestCase):
         d = date.today()+timedelta(days=28)
         self.assertEqual(self.biweekly.amtOn(d), 1.03)
 
-    def test_biweekly_recurrence_with_stop_date(self):
-        self.biweekly.stop_date = date.today()+timedelta(days=15)
+    def test_biweekly_recurrence_with_end_date(self):
+        self.biweekly.end_date = date.today()+timedelta(days=15)
 
         d = date.today()
         self.assertEqual(self.biweekly.amtOn(d), 1.03)
@@ -211,8 +211,8 @@ class TestTransaction(unittest.TestCase):
 
         self.assertEqual(self.monthly.amtOn(man), 1.04)
 
-    def test_monthly_recurrence_with_stop_date(self):
-        self.monthly.stop_date = date.today()+relativedelta(months=1, days=1)
+    def test_monthly_recurrence_with_end_date(self):
+        self.monthly.end_date = date.today()+relativedelta(months=1, days=10)
 
         d = date.today()
         nm = date.today()+relativedelta(months=1)
@@ -257,8 +257,8 @@ class TestTransaction(unittest.TestCase):
 
         self.assertEqual(self.quarterly.amtOn(qan), 1.05)
 
-    def test_quarterly_recurrence_with_stop_date(self):
-        self.quarterly.stop_date = date.today()+relativedelta(months=3, days=1)
+    def test_quarterly_recurrence_with_end_date(self):
+        self.quarterly.end_date = date.today()+relativedelta(months=3, days=10)
 
         d = date.today()
         nq = date.today()+relativedelta(months=3)
@@ -303,8 +303,8 @@ class TestTransaction(unittest.TestCase):
 
         self.assertEqual(self.annually.amtOn(yan), 1.06)
 
-    def test_annual_recurrence_with_stop_date(self):
-        self.annually.stop_date = date.today()+relativedelta(years=1, days=1)
+    def test_annual_recurrence_with_end_date(self):
+        self.annually.end_date = date.today()+relativedelta(years=1, days=10)
 
         d = date.today()
         ny = date.today()+relativedelta(years=1)
