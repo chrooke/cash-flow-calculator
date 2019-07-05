@@ -69,6 +69,10 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(t.frequency, transaction.Transaction.ONCE)
         self.assertEqual(len(t.skip_list), 0,
                          f"non-empty skip_list : {t.skip_list}")
+        self.assertIsInstance(t.scheduled, bool)
+        self.assertFalse(t.scheduled)
+        self.assertIsInstance(t.cleared, bool)
+        self.assertFalse(t.cleared)
 
     def test_constructor_full(self):
         start_date = date.today()
@@ -83,7 +87,9 @@ class TestTransaction(unittest.TestCase):
             description=descr,
             amt=amt,
             frequency=freq,
-            skip=[skip_date])
+            skip=[skip_date],
+            scheduled=True,
+            cleared=True)
         self.assertIsInstance(t, transaction.Transaction)
         self.assertIsInstance(t.start_date, date)
         self.assertEqual(t.start_date, start_date)
@@ -99,6 +105,10 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(t.frequency, freq)
         self.assertEqual(len(t.skip_list), 1)
         self.assertEqual(t.skip_list[0], skip_date)
+        self.assertIsInstance(t.scheduled, bool)
+        self.assertTrue(t.scheduled)
+        self.assertIsInstance(t.cleared, bool)
+        self.assertTrue(t.cleared)
 
     def test_start_date_hits(self):
         d = date.today()

@@ -13,7 +13,8 @@ class Transaction(object):
     ANNUALLY = "A"
 
     def __init__(self, start=date.today(), end=None, description="",
-                 amt=0.00, frequency=None, skip=None):
+                 amt=0.00, frequency=None, skip=None,
+                 scheduled=False, cleared=False):
         self.start_date = start
         self.original_start_date = self.start_date
         self.end_date = end
@@ -32,6 +33,8 @@ class Transaction(object):
             Transaction.QUARTERLY: self._add_quarter,
             Transaction.ANNUALLY: self._add_year
         }.get(self.frequency, None)
+        self.scheduled = scheduled
+        self.cleared = cleared
 
     def amtOn(self, trans_date):
         date = self.start_date
