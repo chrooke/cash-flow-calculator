@@ -40,7 +40,7 @@ class TestTransaction(unittest.TestCase):
             frequency=transaction.Transaction.QUARTERLY)
         self.annually = transaction.Transaction(
             start=date.today(),
-            description="Biweekly",
+            description="Annually",
             amt=1.06,
             frequency=transaction.Transaction.ANNUALLY)
 
