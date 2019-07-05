@@ -21,6 +21,8 @@ class Transaction(object):
         if frequency is None:
             frequency = Transaction.ONCE
         self.frequency = frequency
+        if skip is None:
+            skip = []
         self.skip_list = skip
         self.step_to_next_date = {
             Transaction.WEEKLY: self._add_week,
@@ -33,14 +35,15 @@ class Transaction(object):
     def amtOn(self, trans_date):
         date = self.start_date
         while(True):
-            if date == trans_date:
-                return self.amount
-            if date > trans_date:
-                return 0
-            if self.end_date and trans_date > self.end_date:
-                return 0
-            if self.frequency == Transaction.ONCE:
-                return 0
+            if date not in self.skip_list:
+                if date == trans_date:
+                    return self.amount
+                if date > trans_date:
+                    return 0
+                if self.end_date and trans_date > self.end_date:
+                    return 0
+                if self.frequency == Transaction.ONCE:
+                    return 0
             date = self.step_to_next_date(date)
 
     def _add_week(self, d):

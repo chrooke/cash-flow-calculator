@@ -65,8 +65,8 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(self.t.amount, 0.0)
         self.assertIsInstance(self.t.frequency, str)
         self.assertEqual(self.t.frequency, transaction.Transaction.ONCE)
-        self.assertIsNone(self.t.skip_list,
-                          f"skip_list not None: {self.t.skip_list}")
+        self.assertEqual(len(self.t.skip_list), 0,
+                         f"non-empty skip_list : {self.t.skip_list}")
 
     def test_constructor_full(self):
         start_date = date.today()
