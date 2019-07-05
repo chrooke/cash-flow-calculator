@@ -1,6 +1,7 @@
 #!/bin/env python
 import unittest
 from datetime import date, timedelta
+from dateutil.relativedelta import relativedelta
 import transaction
 
 
@@ -93,21 +94,126 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(len(self.t.skip_list), 1)
         self.assertEqual(self.t.skip_list[0], skip_date)
 
-    def test_once_today_only(self):
+    def test_start_date_hits(self):
         d = date.today()
         self.assertEqual(self.once_today.amtOn(d), 1.00)
         d = date.today()+timedelta(days=1)
         self.assertEqual(self.once_today.amtOn(d), 0)
 
-    def test_once_two_days(self):
+    def test_date_after_start_date_hits(self):
         d = date.today()
         self.assertEqual(self.once_two_days.amtOn(d), 0)
+
         d = date.today()+timedelta(days=1)
         self.assertEqual(self.once_two_days.amtOn(d), 0)
+
         d = date.today()+timedelta(days=2)
         self.assertEqual(self.once_two_days.amtOn(d), 1.01)
+
         d = date.today()+timedelta(days=3)
         self.assertEqual(self.once_two_days.amtOn(d), 0)
+
+    def test_weekly_recurrence(self):
+        d = date.today()
+        self.assertEqual(self.weekly.amtOn(d), 1.02)
+
+        for i in range(1, 6):
+            d = date.today()+timedelta(days=i)
+            self.assertEqual(self.weekly.amtOn(d), 0)
+
+        d = date.today()+timedelta(days=7)
+        self.assertEqual(self.weekly.amtOn(d), 1.02)
+
+        for i in range(8, 13):
+            d = date.today()+timedelta(days=i)
+            self.assertEqual(self.weekly.amtOn(d), 0)
+
+        d = date.today()+timedelta(days=14)
+        self.assertEqual(self.weekly.amtOn(d), 1.02)
+
+    def test_biweekly_recurrence(self):
+        d = date.today()
+        self.assertEqual(self.biweekly.amtOn(d), 1.03)
+
+        for i in range(1, 13):
+            d = date.today()+timedelta(days=i)
+            self.assertEqual(self.biweekly.amtOn(d), 0)
+
+        d = date.today()+timedelta(days=14)
+        self.assertEqual(self.biweekly.amtOn(d), 1.03)
+
+        for i in range(15, 27):
+            d = date.today()+timedelta(days=i)
+            self.assertEqual(self.biweekly.amtOn(d), 0)
+
+        d = date.today()+timedelta(days=28)
+        self.assertEqual(self.biweekly.amtOn(d), 1.03)
+
+    def test_monthly_recurrence(self):
+        d = date.today()
+        nm = date.today()+relativedelta(months=1)
+        nmm1 = (nm-d).days-1
+        nmp1 = (nm-d).days+1
+        man = date.today()+relativedelta(months=2)
+        manm1 = (man-nm).days-1
+
+        self.assertEqual(self.monthly.amtOn(d), 1.04)
+
+        for i in range(1, nmm1):
+            d = date.today()+timedelta(days=i)
+            self.assertEqual(self.monthly.amtOn(d), 0)
+
+        self.assertEqual(self.monthly.amtOn(nm), 1.04)
+
+        for i in range(nmp1, manm1):
+            d = date.today()+timedelta(days=i)
+            self.assertEqual(self.monthly.amtOn(d), 0)
+
+        self.assertEqual(self.monthly.amtOn(man), 1.04)
+
+    def test_quarterly_recurrence(self):
+        d = date.today()
+        nq = date.today()+relativedelta(months=3)
+        nqm1 = (nq-d).days-1
+        nqp1 = (nq-d).days+1
+        qan = date.today()+relativedelta(months=6)
+        qanm1 = (qan-nq).days-1
+
+        self.assertEqual(self.quarterly.amtOn(d), 1.05)
+
+        for i in range(1, nqm1):
+            d = date.today()+timedelta(days=i)
+            self.assertEqual(self.quarterly.amtOn(d), 0)
+
+        self.assertEqual(self.quarterly.amtOn(nq), 1.05)
+
+        for i in range(nqp1, qanm1):
+            d = date.today()+timedelta(days=i)
+            self.assertEqual(self.quarterly.amtOn(d), 0)
+
+        self.assertEqual(self.quarterly.amtOn(qan), 1.05)
+
+    def test_annual_recurrence(self):
+        d = date.today()
+        ny = date.today()+relativedelta(years=1)
+        nym1 = (ny-d).days-1
+        nyp1 = (ny-d).days+1
+        yan = date.today()+relativedelta(years=2)
+        yanm1 = (yan-ny).days-1
+
+        self.assertEqual(self.annually.amtOn(d), 1.06)
+
+        for i in range(1, nym1):
+            d = date.today()+timedelta(days=i)
+            self.assertEqual(self.annually.amtOn(d), 0)
+
+        self.assertEqual(self.annually.amtOn(ny), 1.06)
+
+        for i in range(nyp1, yanm1):
+            d = date.today()+timedelta(days=i)
+            self.assertEqual(self.annually.amtOn(d), 0)
+
+        self.assertEqual(self.annually.amtOn(yan), 1.06)
 
 
 if __name__ == '__main__':

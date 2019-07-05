@@ -1,6 +1,7 @@
 #!/bin/env python
 
 from datetime import date, timedelta
+from dateutil.relativedelta import relativedelta
 
 
 class Transaction(object):
@@ -36,7 +37,7 @@ class Transaction(object):
                 return self.amount
             if (date > trans_date) or (self.frequency == Transaction.ONCE):
                 return 0
-            date = self.step_to_next_date()
+            date = self.step_to_next_date(date)
 
     def _add_week(self, d):
         return d+timedelta(days=7)
@@ -45,10 +46,10 @@ class Transaction(object):
         return d+timedelta(days=14)
 
     def _add_month(self, d):
-        return d.replace(month=d.month+1)
-
+        return d+relativedelta(months=1)
+        
     def _add_quarter(self, d):
-        return d.replace(month=d.month+3)
+        return d+relativedelta(months=3)
 
     def _add_year(self, d):
-        return d.replace(year=d.year+1)
+        return d+relativedelta(years=1)
