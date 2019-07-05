@@ -13,7 +13,7 @@ class Transaction(object):
     ANNUALLY = "A"
 
     def __init__(self, start=date.today(), end=None, description="",
-                 amt=0.00, frequency=None, skip=[]):
+                 amt=0.00, frequency=None, skip=None):
         self.start_date = start
         self.end_date = end
         self.description = description
