@@ -15,6 +15,7 @@ class Transaction(object):
     def __init__(self, start=date.today(), end=None, description="",
                  amt=0.00, frequency=None, skip=None):
         self.start_date = start
+        self.original_start_date = self.start_date
         self.end_date = end
         self.description = description
         self.amount = amt

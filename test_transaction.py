@@ -53,20 +53,22 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(transaction.Transaction.ANNUALLY, "A")
 
     def test_constructor_empty(self):
-        self.t = transaction.Transaction()
-        self.assertIsInstance(self.t, transaction.Transaction)
-        self.assertIsInstance(self.t.start_date, date)
-        self.assertEqual(self.t.start_date, date.today())
-        self.assertIsNone(self.t.end_date,
-                          f"end_date not None: {self.t.end_date}")
-        self.assertIsInstance(self.t.description, str)
-        self.assertEqual(self.t.description, "")
-        self.assertIsInstance(self.t.amount, float)
-        self.assertEqual(self.t.amount, 0.0)
-        self.assertIsInstance(self.t.frequency, str)
-        self.assertEqual(self.t.frequency, transaction.Transaction.ONCE)
-        self.assertEqual(len(self.t.skip_list), 0,
-                         f"non-empty skip_list : {self.t.skip_list}")
+        t = transaction.Transaction()
+        self.assertIsInstance(t, transaction.Transaction)
+        self.assertIsInstance(t.start_date, date)
+        self.assertEqual(t.start_date, date.today())
+        self.assertIsInstance(t.original_start_date, date)
+        self.assertEqual(t.original_start_date, t.start_date)
+        self.assertIsNone(t.end_date,
+                          f"end_date not None: {t.end_date}")
+        self.assertIsInstance(t.description, str)
+        self.assertEqual(t.description, "")
+        self.assertIsInstance(t.amount, float)
+        self.assertEqual(t.amount, 0.0)
+        self.assertIsInstance(t.frequency, str)
+        self.assertEqual(t.frequency, transaction.Transaction.ONCE)
+        self.assertEqual(len(t.skip_list), 0,
+                         f"non-empty skip_list : {t.skip_list}")
 
     def test_constructor_full(self):
         start_date = date.today()
@@ -75,26 +77,28 @@ class TestTransaction(unittest.TestCase):
         descr = "Test transaction"
         amt = 1.00
         freq = transaction.Transaction.WEEKLY
-        self.t = transaction.Transaction(
+        t = transaction.Transaction(
             start=start_date,
             end=end_date,
             description=descr,
             amt=amt,
             frequency=freq,
             skip=[skip_date])
-        self.assertIsInstance(self.t, transaction.Transaction)
-        self.assertIsInstance(self.t.start_date, date)
-        self.assertEqual(self.t.start_date, start_date)
-        self.assertIsInstance(self.t.end_date, date)
-        self.assertEqual(self.t.end_date, end_date)
-        self.assertIsInstance(self.t.description, str)
-        self.assertEqual(self.t.description, descr)
-        self.assertIsInstance(self.t.amount, float)
-        self.assertEqual(self.t.amount, amt)
-        self.assertIsInstance(self.t.frequency, str)
-        self.assertEqual(self.t.frequency, freq)
-        self.assertEqual(len(self.t.skip_list), 1)
-        self.assertEqual(self.t.skip_list[0], skip_date)
+        self.assertIsInstance(t, transaction.Transaction)
+        self.assertIsInstance(t.start_date, date)
+        self.assertEqual(t.start_date, start_date)
+        self.assertIsInstance(t.original_start_date, date)
+        self.assertEqual(t.original_start_date, t.start_date)
+        self.assertIsInstance(t.end_date, date)
+        self.assertEqual(t.end_date, end_date)
+        self.assertIsInstance(t.description, str)
+        self.assertEqual(t.description, descr)
+        self.assertIsInstance(t.amount, float)
+        self.assertEqual(t.amount, amt)
+        self.assertIsInstance(t.frequency, str)
+        self.assertEqual(t.frequency, freq)
+        self.assertEqual(len(t.skip_list), 1)
+        self.assertEqual(t.skip_list[0], skip_date)
 
     def test_start_date_hits(self):
         d = date.today()
@@ -387,6 +391,12 @@ class TestTransaction(unittest.TestCase):
             self.assertEqual(self.annually.amtOn(d+timedelta(days=i)), 0)
 
         self.assertEqual(self.annually.amtOn(yan), 1.06)
+
+    def test_start_date_change(self):
+        t = transaction.Transaction()
+        t.start_date = date.today()+timedelta(days=5)
+        self.assertEqual(t.start_date, date.today()+timedelta(days=5))
+        self.assertEqual(t.original_start_date, date.today())
 
 
 if __name__ == '__main__':
