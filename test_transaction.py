@@ -304,7 +304,7 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(self.annually.amtOn(yan), 1.06)
 
     def test_annual_recurrence_with_stop_date(self):
-        self.annual.stop_date = date.today()+relativedelta(years=1, days=1)
+        self.annually.stop_date = date.today()+relativedelta(years=1, days=1)
 
         d = date.today()
         ny = date.today()+relativedelta(years=1)

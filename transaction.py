@@ -35,7 +35,11 @@ class Transaction(object):
         while(True):
             if date == trans_date:
                 return self.amount
-            if (date > trans_date) or (self.frequency == Transaction.ONCE):
+            if date > trans_date:
+                return 0
+            if self.stop_date and trans_date > self.stop_date:
+                return 0
+            if self.frequency == Transaction.ONCE:
                 return 0
             date = self.step_to_next_date(date)
 
@@ -47,7 +51,7 @@ class Transaction(object):
 
     def _add_month(self, d):
         return d+relativedelta(months=1)
-        
+
     def _add_quarter(self, d):
         return d+relativedelta(months=3)
 
