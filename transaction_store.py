@@ -9,9 +9,14 @@ class TransactionStore(object):
     def __init__(self):
         self.store = []
 
-    def add(self, start=date.today(), end=None, description="",
-            amt=0.00, frequency=None, skip=None,
-            scheduled=False, cleared=False):
-        self.store.append(transaction.Transaction(start, end, description,
-                          amt, frequency, skip,
-                          scheduled, cleared))
+    def add(self, first_transaction, *remaining_transactions):
+        self.store.append(first_transaction)
+        self.store = self.store + list(remaining_transactions)
+
+    def saveTransactions(self, file):
+        with open(file, "w") as f:
+            yaml.dump(self.store, f)
+
+    def loadTransactions(self, file):
+        with open(file, "r") as f:
+            self.store = yaml.full_load(f)

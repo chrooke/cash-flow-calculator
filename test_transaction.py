@@ -9,39 +9,39 @@ class TestTransaction(unittest.TestCase):
 
     def setUp(self):
         self.once_today = transaction.Transaction(
-            start=date.today(),
+            start_date=date.today(),
             description="Once, today",
-            amt=1.00,
+            amount=1.00,
             frequency=transaction.Transaction.ONCE)
         self.once_two_days = transaction.Transaction(
-            start=date.today()+timedelta(days=2),
+            start_date=date.today()+timedelta(days=2),
             description="Once, in two days",
-            amt=1.01,
+            amount=1.01,
             frequency=transaction.Transaction.ONCE)
         self.weekly = transaction.Transaction(
-            start=date.today(),
+            start_date=date.today(),
             description="Weekly",
-            amt=1.02,
+            amount=1.02,
             frequency=transaction.Transaction.WEEKLY)
         self.biweekly = transaction.Transaction(
-            start=date.today(),
+            start_date=date.today(),
             description="Biweekly",
-            amt=1.03,
+            amount=1.03,
             frequency=transaction.Transaction.BIWEEKLY)
         self.monthly = transaction.Transaction(
-            start=date.today(),
+            start_date=date.today(),
             description="Monthly",
-            amt=1.04,
+            amount=1.04,
             frequency=transaction.Transaction.MONTHLY)
         self.quarterly = transaction.Transaction(
-            start=date.today(),
+            start_date=date.today(),
             description="Quarterly",
-            amt=1.05,
+            amount=1.05,
             frequency=transaction.Transaction.QUARTERLY)
         self.annually = transaction.Transaction(
-            start=date.today(),
+            start_date=date.today(),
             description="Annually",
-            amt=1.06,
+            amount=1.06,
             frequency=transaction.Transaction.ANNUALLY)
 
     def test_class_constants(self):
@@ -76,25 +76,27 @@ class TestTransaction(unittest.TestCase):
 
     def test_constructor_full(self):
         start_date = date.today()
+        original_start_date = date.today()-timedelta(days=7)
         skip_date = start_date + timedelta(days=14)
         end_date = start_date.replace(month=start_date.month+1)
         descr = "Test transaction"
         amt = 1.00
         freq = transaction.Transaction.WEEKLY
         t = transaction.Transaction(
-            start=start_date,
-            end=end_date,
+            start_date=start_date,
+            original_start_date=original_start_date,
+            end_date=end_date,
             description=descr,
-            amt=amt,
+            amount=amt,
             frequency=freq,
-            skip=[skip_date],
+            skip_list=[skip_date],
             scheduled=True,
             cleared=True)
         self.assertIsInstance(t, transaction.Transaction)
         self.assertIsInstance(t.start_date, date)
         self.assertEqual(t.start_date, start_date)
         self.assertIsInstance(t.original_start_date, date)
-        self.assertEqual(t.original_start_date, t.start_date)
+        self.assertEqual(t.original_start_date, original_start_date)
         self.assertIsInstance(t.end_date, date)
         self.assertEqual(t.end_date, end_date)
         self.assertIsInstance(t.description, str)

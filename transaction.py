@@ -12,29 +12,43 @@ class Transaction(object):
     QUARTERLY = "Q"
     ANNUALLY = "A"
 
-    def __init__(self, start=date.today(), end=None, description="",
-                 amt=0.00, frequency=None, skip=None,
-                 scheduled=False, cleared=False):
-        self.start_date = start
-        self.original_start_date = self.start_date
-        self.end_date = end
+    def __init__(self,
+                 start_date=date.today(),
+                 original_start_date=None,
+                 end_date=None,
+                 description="",
+                 amount=0.00,
+                 frequency=None,
+                 skip_list=None,
+                 scheduled=False,
+                 cleared=False):
+        self.start_date = start_date
+        if original_start_date is None:
+            original_start_date = self.start_date
+        self.original_start_date = original_start_date
+        self.end_date = end_date
         self.description = description
-        self.amount = amt
+        self.amount = amount
         if frequency is None:
             frequency = Transaction.ONCE
         self.frequency = frequency
-        if skip is None:
-            skip = []
-        self.skip_list = skip
-        self.step_to_next_date = {
+        if skip_list is None:
+            skip_list = []
+        self.skip_list = skip_list
+        self.scheduled = scheduled
+        self.cleared = cleared
+
+    def _step_to_next_date(self, date):
+        skip_func = {
             Transaction.WEEKLY: self._add_week,
             Transaction.BIWEEKLY: self._add_two_weeks,
             Transaction.MONTHLY: self._add_month,
             Transaction.QUARTERLY: self._add_quarter,
             Transaction.ANNUALLY: self._add_year
         }.get(self.frequency, None)
-        self.scheduled = scheduled
-        self.cleared = cleared
+
+        if skip_func is not None:
+            return skip_func(date)
 
     def amtOn(self, trans_date):
         date = self.start_date
@@ -48,7 +62,7 @@ class Transaction(object):
                     return 0
                 if self.frequency == Transaction.ONCE:
                     return 0
-            date = self.step_to_next_date(date)
+            date = self._step_to_next_date(date)
 
     def _add_week(self, d):
         return d+timedelta(days=7)
