@@ -38,18 +38,6 @@ class Transaction(object):
         self.scheduled = scheduled
         self.cleared = cleared
 
-    def _step_to_next_date(self, date):
-        skip_func = {
-            Transaction.WEEKLY: self._add_week,
-            Transaction.BIWEEKLY: self._add_two_weeks,
-            Transaction.MONTHLY: self._add_month,
-            Transaction.QUARTERLY: self._add_quarter,
-            Transaction.ANNUALLY: self._add_year
-        }.get(self.frequency, None)
-
-        if skip_func is not None:
-            return skip_func(date)
-
     def amtOn(self, trans_date):
         date = self.start
         while(True):
@@ -84,6 +72,18 @@ class Transaction(object):
             skip=self.skip,
             scheduled=self.scheduled,
             cleared=self.cleared)
+
+    def _step_to_next_date(self, date):
+        skip_func = {
+            Transaction.WEEKLY: self._add_week,
+            Transaction.BIWEEKLY: self._add_two_weeks,
+            Transaction.MONTHLY: self._add_month,
+            Transaction.QUARTERLY: self._add_quarter,
+            Transaction.ANNUALLY: self._add_year
+        }.get(self.frequency, None)
+
+        if skip_func is not None:
+            return skip_func(date)
 
     def _add_week(self, d):
         return d+timedelta(days=7)

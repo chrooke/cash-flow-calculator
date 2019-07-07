@@ -31,3 +31,7 @@ class TransactionStore(object):
                             if t.description == description and
                             t.start == requested_date]
         return transactions
+
+    def replaceTransaction(self, old, new):
+        self.store.remove(old)
+        self.store.append(new)

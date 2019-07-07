@@ -169,7 +169,7 @@ class TestRetrieveFromMultipleDuplicateSingleTransactions(unittest.TestCase):
         self.assertEqual(len(t_list), 0)
 
 
-# UPDATE
+# UPDATE (replace old with new)
 class TestBasicUpdate(unittest.TestCase):
     def setUp(self):
         self.ts = TransactionStore()
@@ -181,6 +181,18 @@ class TestBasicUpdate(unittest.TestCase):
             frequency=transaction.Transaction.ONCE)
 
         self.ts.add(t1)
+
+    def test_replace(self):
+        ts = self.ts.getTransaction("Once")
+        self.assertEqual(len(ts), 1)
+        t1 = ts[0]
+        t2 = t1.duplicate()
+        t2.description = "Once replaced"
+        self.ts.replaceTransaction(t1, t2)
+        t_old = self.ts.getTransaction("Once")
+        self.assertEqual(len(t_old), 0)
+        t_new = self.ts.getTransaction("Once replaced")
+        self.assertEqual(len(t_new), 1)
 
 
 # DELETE
