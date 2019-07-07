@@ -284,3 +284,7 @@ class TestUtilityFunctions(unittest.TestCase):
 
     def test_purge_outdated_single_transactions(self):
         pass
+
+
+if __name__ == '__main__':
+    unittest.main()

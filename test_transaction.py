@@ -5,44 +5,7 @@ from dateutil.relativedelta import relativedelta
 import transaction
 
 
-class TestTransaction(unittest.TestCase):
-
-    def setUp(self):
-        self.once_today = transaction.Transaction(
-            start=date.today(),
-            description="Once, today",
-            amount=1.00,
-            frequency=transaction.Transaction.ONCE)
-        self.once_two_days = transaction.Transaction(
-            start=date.today()+timedelta(days=2),
-            description="Once, in two days",
-            amount=1.01,
-            frequency=transaction.Transaction.ONCE)
-        self.weekly = transaction.Transaction(
-            start=date.today(),
-            description="Weekly",
-            amount=1.02,
-            frequency=transaction.Transaction.WEEKLY)
-        self.biweekly = transaction.Transaction(
-            start=date.today(),
-            description="Biweekly",
-            amount=1.03,
-            frequency=transaction.Transaction.BIWEEKLY)
-        self.monthly = transaction.Transaction(
-            start=date.today(),
-            description="Monthly",
-            amount=1.04,
-            frequency=transaction.Transaction.MONTHLY)
-        self.quarterly = transaction.Transaction(
-            start=date.today(),
-            description="Quarterly",
-            amount=1.05,
-            frequency=transaction.Transaction.QUARTERLY)
-        self.annually = transaction.Transaction(
-            start=date.today(),
-            description="Annually",
-            amount=1.06,
-            frequency=transaction.Transaction.ANNUALLY)
+class TestConstructor(unittest.TestCase):
 
     def test_class_constants(self):
         self.assertEqual(transaction.Transaction.ONCE, "O")
@@ -114,326 +77,299 @@ class TestTransaction(unittest.TestCase):
         self.assertIsInstance(t.cleared, bool)
         self.assertTrue(t.cleared)
 
+
+class TestRecurrence(unittest.TestCase):
+    def assertRecurrence(self, t,
+                         start_date, start_value,
+                         gap1_end,
+                         middle_date, middle_value,
+                         gap2_start, gap2_end,
+                         final_date, final_value):
+        self.assertEqual(t.amtOn(start_date), start_value)
+
+        for i in range(1, gap1_end):
+            self.assertEqual(t.amtOn(start_date+timedelta(days=i)), 0)
+
+        self.assertEqual(t.amtOn(middle_date), middle_value)
+
+        for i in range(gap2_start, gap2_end):
+            self.assertEqual(t.amtOn(start_date+timedelta(days=i)), 0)
+
+
+class TestWeeklyRecurrence(TestRecurrence):
+    def setUp(self):
+        self.t = transaction.Transaction(
+            start=date.today(),
+            description="Weekly",
+            amount=1.02,
+            frequency=transaction.Transaction.WEEKLY)
+        self.sd = self.t.start
+        self.nw = self.sd + timedelta(days=7)
+        self.nw_days = (self.nw-self.sd).days
+        self.nwp1_days = self.nw_days+1
+        self.wan = self.sd + timedelta(days=14)
+        self.wan_days = (self.wan-self.sd).days
+
+    def test_recurrence(self):
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.nw_days,
+                              self.nw, self.t.amount,
+                              self.nwp1_days, self.wan_days,
+                              self.wan, self.t.amount)
+
+    def test_recurrence_with_end(self):
+        self.t.end = self.nw+timedelta(days=1)
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.nw_days,
+                              self.nw, self.t.amount,
+                              self.nwp1_days, self.wan_days,
+                              self.wan, 0)
+
+    def test_recurrence_with_skip(self):
+        self.t.skip.add(self.nw)
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.nw_days,
+                              self.nw, 0,
+                              self.nwp1_days, self.wan_days,
+                              self.wan, self.t.amount)
+
+
+class TestBiweeklyRecurrence(TestRecurrence):
+    def setUp(self):
+        self.t = transaction.Transaction(
+            start=date.today(),
+            description="Biweekly",
+            amount=1.03,
+            frequency=transaction.Transaction.BIWEEKLY)
+        self.sd = self.t.start
+        self.nbw = self.sd + timedelta(days=14)
+        self.nbw_days = (self.nbw-self.sd).days
+        self.nbwp1_days = self.nbw_days+1
+        self.bwan = self.sd + timedelta(days=28)
+        self.bwan_days = (self.bwan-self.sd).days
+
+    def test_recurrence(self):
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.nbw_days,
+                              self.nbw, self.t.amount,
+                              self.nbwp1_days, self.bwan_days,
+                              self.bwan, self.t.amount)
+
+    def test_recurrence_with_end(self):
+        self.t.end = self.nbw+timedelta(days=1)
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.nbw_days,
+                              self.nbw, self.t.amount,
+                              self.nbwp1_days, self.bwan_days,
+                              self.bwan, 0)
+
+    def test_recurrence_with_skip(self):
+        self.t.skip.add(self.nbw)
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.nbw_days,
+                              self.nbw, 0,
+                              self.nbwp1_days, self.bwan_days,
+                              self.bwan, self.t.amount)
+
+
+class TestMonthlyRecurrence(TestRecurrence):
+    def setUp(self):
+        self.t = transaction.Transaction(
+            start=date.today(),
+            description="Monthly",
+            amount=1.04,
+            frequency=transaction.Transaction.MONTHLY)
+        self.sd = self.t.start
+        self.nm = self.sd + relativedelta(months=1)
+        self.nm_days = (self.nm-self.sd).days
+        self.nmp1_days = self.nm_days+1
+        self.man = self.sd+relativedelta(months=2)
+        self.man_days = (self.man-self.sd).days
+
+    def test_recurrence(self):
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.nm_days,
+                              self.nm, self.t.amount,
+                              self.nmp1_days, self.man_days,
+                              self.man, self.t.amount)
+
+    def test_recurrence_with_end(self):
+        self.t.end = self.nm+relativedelta(days=10)
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.nm_days,
+                              self.nm, self.t.amount,
+                              self.nmp1_days, self.man_days,
+                              self.man, 0)
+
+    def test_recurrence_with_skip(self):
+        self.t.skip.add(self.nm)
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.nm_days,
+                              self.nm, 0,
+                              self.nmp1_days, self.man_days,
+                              self.man, self.t.amount)
+
+
+class TestQuarterlyRecurrence(TestRecurrence):
+    def setUp(self):
+        self.t = transaction.Transaction(
+            start=date.today(),
+            description="Quarterly",
+            amount=1.05,
+            frequency=transaction.Transaction.QUARTERLY)
+        self.sd = self.t.start
+        self.nq = self.sd + relativedelta(months=3)
+        self.nq_days = (self.nq-self.sd).days
+        self.nqp1_days = self.nq_days+1
+        self.qan = self.sd+relativedelta(months=6)
+        self.qan_days = (self.qan-self.sd).days
+
+    def test_recurrence(self):
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.nq_days,
+                              self.nq, self.t.amount,
+                              self.nqp1_days, self.qan_days,
+                              self.qan, self.t.amount)
+
+    def test_recurrence_with_end(self):
+        self.t.end = self.nq+relativedelta(days=10)
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.nq_days,
+                              self.nq, self.t.amount,
+                              self.nqp1_days, self.qan_days,
+                              self.qan, 0)
+
+    def test_recurrence_with_skip(self):
+        self.t.skip.add(self.nq)
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.nq_days,
+                              self.nq, 0,
+                              self.nqp1_days, self.qan_days,
+                              self.qan, self.t.amount)
+
+
+class TestAnnualRecurrence(TestRecurrence):
+    def setUp(self):
+        self.t = transaction.Transaction(
+            start=date.today(),
+            description="Annually",
+            amount=1.06,
+            frequency=transaction.Transaction.ANNUALLY)
+        self.sd = self.t.start
+        self.ny = self.sd + relativedelta(years=1)
+        self.ny_days = (self.ny-self.sd).days
+        self.nyp1_days = self.ny_days+1
+        self.yan = self.sd + relativedelta(years=2)
+        self.yan_days = (self.yan-self.sd).days
+
+    def test_recurrence(self):
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.ny_days,
+                              self.ny, self.t.amount,
+                              self.nyp1_days, self.yan_days,
+                              self.yan, self.t.amount)
+
+    def test_recurrence_with_end(self):
+        self.t.end = self.ny+relativedelta(days=10)
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.ny_days,
+                              self.ny, self.t.amount,
+                              self.nyp1_days, self.yan_days,
+                              self.yan, 0)
+
+    def test_recurrence_with_skip(self):
+        self.t.skip.add(self.ny)
+        self.assertRecurrence(self.t,
+                              self.sd, self.t.amount,
+                              self.ny_days,
+                              self.ny, 0,
+                              self.nyp1_days, self.yan_days,
+                              self.yan, self.t.amount)
+
+
+class TestOneTimeTransactionHits(unittest.TestCase):
+    def setUp(self):
+        self.sd = date.today()
+        self.sdp1 = self.sd + timedelta(days=1)
+        self.sdp2 = self.sd + timedelta(days=2)
+        self.sdp3 = self.sd + timedelta(days=3)
+        self.t1 = transaction.Transaction(
+            start=self.sd,
+            description="Once, today",
+            amount=1.00,
+            frequency=transaction.Transaction.ONCE)
+        self.t2 = transaction.Transaction(
+            start=self.sdp2,
+            description="Once, in two days",
+            amount=1.01,
+            frequency=transaction.Transaction.ONCE)
+
     def test_start_date_hits(self):
-        d = date.today()
-        self.assertEqual(self.once_today.amtOn(d), 1.00)
-        self.assertEqual(self.once_today.amtOn(d+timedelta(days=1)), 0)
+        self.assertEqual(self.t1.amtOn(self.sd), self.t1.amount)
+        self.assertEqual(self.t1.amtOn(self.sdp1), 0)
 
     def test_date_after_start_date_hits(self):
-        d = date.today()
-        self.assertEqual(self.once_two_days.amtOn(d), 0)
-        self.assertEqual(self.once_two_days.amtOn(d+timedelta(days=1)), 0)
-        self.assertEqual(self.once_two_days.amtOn(d+timedelta(days=2)), 1.01)
-        self.assertEqual(self.once_two_days.amtOn(d+timedelta(days=3)), 0)
-
-    def test_weekly_recurrence(self):
-        d = date.today()
-
-        self.assertEqual(self.weekly.amtOn(d), 1.02)
-
-        for i in range(1, 6):
-            self.assertEqual(self.weekly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.weekly.amtOn(d+timedelta(days=7)), 1.02)
-
-        for i in range(8, 13):
-            self.assertEqual(self.weekly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.weekly.amtOn(d+timedelta(days=14)), 1.02)
-
-    def test_weekly_recurrence_with_end(self):
-        d = date.today()
-        self.weekly.end = d+timedelta(days=8)
-
-        self.assertEqual(self.weekly.amtOn(d), 1.02)
-
-        for i in range(1, 6):
-            self.assertEqual(self.weekly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.weekly.amtOn(d+timedelta(days=7)), 1.02)
-
-        for i in range(8, 13):
-            self.assertEqual(self.weekly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.weekly.amtOn(d+timedelta(days=14)), 0)
-
-    def test_weekly_recurrence_with_skip(self):
-        d = date.today()
-        self.weekly.skip.add(d+timedelta(days=7))
-
-        self.assertEqual(self.weekly.amtOn(d), 1.02)
-
-        for i in range(1, 6):
-            self.assertEqual(self.weekly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.weekly.amtOn(d+timedelta(days=7)), 0)
-
-        for i in range(8, 13):
-            self.assertEqual(self.weekly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.weekly.amtOn(d+timedelta(days=14)), 1.02)
-
-    def test_biweekly_recurrence(self):
-        d = date.today()
-
-        self.assertEqual(self.biweekly.amtOn(d), 1.03)
-
-        for i in range(1, 13):
-            self.assertEqual(self.biweekly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.biweekly.amtOn(d+timedelta(days=14)), 1.03)
-
-        for i in range(15, 27):
-            self.assertEqual(self.biweekly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.biweekly.amtOn(d+timedelta(days=28)), 1.03)
-
-    def test_biweekly_recurrence_with_end(self):
-        d = date.today()
-        self.biweekly.end = d+timedelta(days=15)
-
-        self.assertEqual(self.biweekly.amtOn(d), 1.03)
-
-        for i in range(1, 13):
-            self.assertEqual(self.biweekly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.biweekly.amtOn(d+timedelta(days=14)), 1.03)
-
-        for i in range(15, 27):
-            self.assertEqual(self.biweekly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.biweekly.amtOn(d+timedelta(days=28)), 0)
-
-    def test_biweekly_recurrence_with_skip(self):
-        d = date.today()
-        self.biweekly.skip.add(d+timedelta(days=14))
-
-        self.assertEqual(self.biweekly.amtOn(d), 1.03)
-
-        for i in range(1, 13):
-            self.assertEqual(self.biweekly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.biweekly.amtOn(d+timedelta(days=14)), 0)
-
-        for i in range(15, 27):
-            self.assertEqual(self.biweekly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.biweekly.amtOn(d+timedelta(days=28)), 1.03)
-
-    def test_monthly_recurrence(self):
-        d = date.today()
-        nm = date.today()+relativedelta(months=1)
-        nmm1 = (nm-d).days-1
-        nmp1 = (nm-d).days+1
-        man = date.today()+relativedelta(months=2)
-        manm1 = (man-nm).days-1
-
-        self.assertEqual(self.monthly.amtOn(d), 1.04)
-
-        for i in range(1, nmm1):
-            self.assertEqual(self.monthly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.monthly.amtOn(nm), 1.04)
-
-        for i in range(nmp1, manm1):
-            self.assertEqual(self.monthly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.monthly.amtOn(man), 1.04)
-
-    def test_monthly_recurrence_with_end(self):
-        d = date.today()
-        nm = d+relativedelta(months=1)
-        nmm1 = (nm-d).days-1
-        nmp1 = (nm-d).days+1
-        man = d+relativedelta(months=2)
-        manm1 = (man-nm).days-1
-        self.monthly.end = nm+relativedelta(days=10)
-
-        self.assertEqual(self.monthly.amtOn(d), 1.04)
-
-        for i in range(1, nmm1):
-            self.assertEqual(self.monthly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.monthly.amtOn(nm), 1.04)
-
-        for i in range(nmp1, manm1):
-            self.assertEqual(self.monthly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.monthly.amtOn(man), 0)
-
-    def test_monthly_recurrence_with_skip_date(self):
-        d = date.today()
-        nm = d+relativedelta(months=1)
-        nmm1 = (nm-d).days-1
-        nmp1 = (nm-d).days+1
-        man = d+relativedelta(months=2)
-        manm1 = (man-nm).days-1
-        self.monthly.skip.add(nm)
-
-        self.assertEqual(self.monthly.amtOn(d), 1.04)
-
-        for i in range(1, nmm1):
-            self.assertEqual(self.monthly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.monthly.amtOn(nm), 0)
-
-        for i in range(nmp1, manm1):
-            self.assertEqual(self.monthly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.monthly.amtOn(man), 1.04)
-
-    def test_quarterly_recurrence(self):
-        d = date.today()
-        nq = d+relativedelta(months=3)
-        nqm1 = (nq-d).days-1
-        nqp1 = (nq-d).days+1
-        qan = d+relativedelta(months=6)
-        qanm1 = (qan-nq).days-1
-
-        self.assertEqual(self.quarterly.amtOn(d), 1.05)
-
-        for i in range(1, nqm1):
-            self.assertEqual(self.quarterly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.quarterly.amtOn(nq), 1.05)
-
-        for i in range(nqp1, qanm1):
-            self.assertEqual(self.quarterly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.quarterly.amtOn(qan), 1.05)
-
-    def test_quarterly_recurrence_with_end(self):
-        d = date.today()
-        nq = date.today()+relativedelta(months=3)
-        nqm1 = (nq-d).days-1
-        nqp1 = (nq-d).days+1
-        qan = date.today()+relativedelta(months=6)
-        qanm1 = (qan-nq).days-1
-        self.quarterly.end = d+relativedelta(months=3, days=10)
-
-        self.assertEqual(self.quarterly.amtOn(d), 1.05)
-
-        for i in range(1, nqm1):
-            self.assertEqual(self.quarterly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.quarterly.amtOn(nq), 1.05)
-
-        for i in range(nqp1, qanm1):
-            self.assertEqual(self.quarterly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.quarterly.amtOn(qan), 0)
-
-    def test_quarterly_recurrence_with_skip(self):
-        d = date.today()
-        nq = date.today()+relativedelta(months=3)
-        nqm1 = (nq-d).days-1
-        nqp1 = (nq-d).days+1
-        qan = date.today()+relativedelta(months=6)
-        qanm1 = (qan-nq).days-1
-        self.quarterly.skip.add(nq)
-
-        self.assertEqual(self.quarterly.amtOn(d), 1.05)
-
-        for i in range(1, nqm1):
-            self.assertEqual(self.quarterly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.quarterly.amtOn(nq), 0)
-
-        for i in range(nqp1, qanm1):
-            self.assertEqual(self.quarterly.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.quarterly.amtOn(qan), 1.05)
-
-    def test_annual_recurrence(self):
-        d = date.today()
-        ny = d+relativedelta(years=1)
-        nym1 = (ny-d).days-1
-        nyp1 = (ny-d).days+1
-        yan = d+relativedelta(years=2)
-        yanm1 = (yan-ny).days-1
-
-        self.assertEqual(self.annually.amtOn(d), 1.06)
-
-        for i in range(1, nym1):
-            self.assertEqual(self.annually.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.annually.amtOn(ny), 1.06)
-
-        for i in range(nyp1, yanm1):
-            self.assertEqual(self.annually.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.annually.amtOn(yan), 1.06)
-
-    def test_annual_recurrence_with_end(self):
-        d = date.today()
-        ny = d+relativedelta(years=1)
-        nym1 = (ny-d).days-1
-        nyp1 = (ny-d).days+1
-        yan = d+relativedelta(years=2)
-        yanm1 = (yan-ny).days-1
-        self.annually.end = d+relativedelta(years=1, days=10)
-
-        self.assertEqual(self.annually.amtOn(d), 1.06)
-
-        for i in range(1, nym1):
-            self.assertEqual(self.annually.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.annually.amtOn(ny), 1.06)
-
-        for i in range(nyp1, yanm1):
-            self.assertEqual(self.annually.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.annually.amtOn(yan), 0)
-
-    def test_annual_recurrence_with_skip(self):
-        d = date.today()
-        ny = d+relativedelta(years=1)
-        nym1 = (ny-d).days-1
-        nyp1 = (ny-d).days+1
-        yan = d+relativedelta(years=2)
-        yanm1 = (yan-ny).days-1
-        self.annually.skip.add(ny)
-
-        self.assertEqual(self.annually.amtOn(d), 1.06)
-
-        for i in range(1, nym1):
-            self.assertEqual(self.annually.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.annually.amtOn(ny), 0)
-
-        for i in range(nyp1, yanm1):
-            self.assertEqual(self.annually.amtOn(d+timedelta(days=i)), 0)
-
-        self.assertEqual(self.annually.amtOn(yan), 1.06)
+        self.assertEqual(self.t2.amtOn(self.sd), 0)
+        self.assertEqual(self.t2.amtOn(self.sdp1), 0)
+        self.assertEqual(self.t2.amtOn(self.sdp2), self.t2.amount)
+        self.assertEqual(self.t2.amtOn(self.sdp3), 0)
+
+
+class TestStartDateChange(unittest.TestCase):
+
+    def setUp(self):
+        self.sd = date.today()
+        self.t1 = transaction.Transaction(
+            start=self.sd,
+            description="Once, today",
+            amount=1.00,
+            frequency=transaction.Transaction.ONCE)
+        self.t2 = transaction.Transaction(
+            start=self.sd,
+            description="Weekly",
+            amount=1.02,
+            frequency=transaction.Transaction.WEEKLY)
 
     def test_start_date_change_non_recurring(self):
-        d = date.today()
-        new_base = d + timedelta(days=16)
+        new_base = self.sd + timedelta(days=16)
 
-        self.assertEqual(self.once_today.frequency,
+        self.assertEqual(self.t1.frequency,
                          transaction.Transaction.ONCE)
-        self.assertEqual(self.once_today.start, d)
-        self.assertEqual(self.once_today.original_start, d)
+        self.assertEqual(self.t1.start, self.sd)
+        self.assertEqual(self.t1.original_start, self.sd)
 
-        self.once_today.updateStartDate(new_base)
+        self.t1.updateStartDate(new_base)
 
-        self.assertEqual(self.once_today.start, new_base)
-        self.assertEqual(self.once_today.original_start, d)
+        self.assertEqual(self.t1.start, new_base)
+        self.assertEqual(self.t1.original_start, self.sd)
 
     def test_start_date_change_recurring(self):
-        d = date.today()
-        new_base = d + timedelta(days=16)
-        new_start = d + timedelta(days=21)
+        new_base = self.sd + timedelta(days=16)
+        new_start = self.sd + timedelta(days=21)
 
-        self.assertEqual(self.weekly.frequency,
+        self.assertEqual(self.t2.frequency,
                          transaction.Transaction.WEEKLY)
-        self.assertEqual(self.weekly.start, d)
-        self.assertEqual(self.weekly.original_start, d)
+        self.assertEqual(self.t2.start, self.sd)
+        self.assertEqual(self.t2.original_start, self.sd)
 
-        self.weekly.updateStartDate(new_base)
+        self.t2.updateStartDate(new_base)
 
-        self.assertEqual(self.weekly.start, new_start)
-        self.assertEqual(self.weekly.original_start, d)
+        self.assertEqual(self.t2.start, new_start)
+        self.assertEqual(self.t2.original_start, self.sd)
 
 
 if __name__ == '__main__':
