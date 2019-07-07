@@ -73,6 +73,18 @@ class Transaction(object):
                 date = self._step_to_next_date(date)
         self.start = date
 
+    def duplicate(self):
+        return Transaction(
+            start=self.start,
+            original_start=self.original_start,
+            end=self.end,
+            description=self.description,
+            amount=self.amount,
+            frequency=self.frequency,
+            skip=self.skip,
+            scheduled=self.scheduled,
+            cleared=self.cleared)
+
     def _add_week(self, d):
         return d+timedelta(days=7)
 

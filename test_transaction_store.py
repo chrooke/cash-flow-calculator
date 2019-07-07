@@ -170,8 +170,17 @@ class TestRetrieveFromMultipleDuplicateSingleTransactions(unittest.TestCase):
 
 
 # UPDATE
-class TestUpdate(unittest.TestCase):
-    pass
+class TestBasicUpdate(unittest.TestCase):
+    def setUp(self):
+        self.ts = TransactionStore()
+
+        t1 = transaction.Transaction(
+            start=date.today(),
+            description="Once",
+            amount=1.00,
+            frequency=transaction.Transaction.ONCE)
+
+        self.ts.add(t1)
 
 
 # DELETE

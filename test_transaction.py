@@ -78,6 +78,33 @@ class TestConstructor(unittest.TestCase):
         self.assertTrue(t.cleared)
 
 
+class TestDuplicateTransaction(unittest.TestCase):
+    def setUp(self):
+        sd = date.today()
+        self.t1 = transaction.Transaction(
+            start=sd,
+            original_start=sd-timedelta(days=1),
+            end=sd+timedelta(days=56),
+            description="Weekly",
+            amount=1.02,
+            frequency=transaction.Transaction.WEEKLY,
+            skip=set([sd+timedelta(days=7)]),
+            scheduled=True,
+            cleared=True)
+
+    def test_duplicate_transaction(self):
+        t2 = self.t1.duplicate()
+        self.assertEqual(self.t1.start, t2.start)
+        self.assertEqual(self.t1.original_start, t2.original_start)
+        self.assertEqual(self.t1.end, t2.end)
+        self.assertEqual(self.t1.description, t2.description)
+        self.assertEqual(self.t1.amount, t2.amount)
+        self.assertEqual(self.t1.frequency, t2.frequency)
+        self.assertEqual(self.t1.skip.symmetric_difference(t2.skip), set())
+        self.assertEqual(self.t1.scheduled, t2.scheduled)
+        self.assertEqual(self.t1.cleared, t2.cleared)
+
+
 class TestRecurrence(unittest.TestCase):
     def assertRecurrence(self, t,
                          start_date, start_value,
