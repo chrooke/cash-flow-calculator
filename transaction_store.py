@@ -49,3 +49,10 @@ class TransactionStore(object):
                            if x.frequency != transaction.Transaction.ONCE]
         for t in recurring_trans:
             t.updateStartDate(new_date)
+
+    def purgeSingleBefore(self, purge_date):
+        single_trans = [x for x in self.store
+                        if x.frequency == transaction.Transaction.ONCE]
+        for t in single_trans:
+            if t.start < purge_date:
+                self.removeTransactions(t)

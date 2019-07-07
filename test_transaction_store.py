@@ -462,7 +462,16 @@ class TestUtilityFunctions(unittest.TestCase):
         self.assertEqual(self.t4.original_start, origsd2)
 
     def test_purge_outdated_single_transactions(self):
-        pass
+        purge_date = date.today() + timedelta(days=1)
+
+        self.assertEqual(len(self.ts.store), 4)
+        self.ts.purgeSingleBefore(purge_date)
+        self.assertEqual(len(self.ts.store), 3)
+        exp_set = set([self.t2, self.t3, self.t4])
+        act_set = set(self.ts.store)
+        self.assertEqual(exp_set.symmetric_difference(act_set), set())
+        t_list = self.ts.getTransaction("Once, in two days")
+        self.assertEqual(len(t_list), 1)
 
 
 if __name__ == '__main__':
