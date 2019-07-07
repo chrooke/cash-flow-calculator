@@ -48,7 +48,7 @@ class TestBasicCreate(unittest.TestCase):
             description="Weekly",
             amount=1.02,
             frequency=transaction.Transaction.WEEKLY,
-            skip=[d+timedelta(days=7)],
+            skip=set([d+timedelta(days=7)]),
             scheduled=True,
             cleared=True)
 
@@ -202,7 +202,7 @@ class TestFileOperations(unittest.TestCase):
             description="Weekly",
             amount=1.02,
             frequency=transaction.Transaction.WEEKLY,
-            skip=[date.today()+timedelta(days=7)],
+            skip=set([date.today()+timedelta(days=7)]),
             scheduled=True,
             cleared=True)
 
@@ -220,7 +220,7 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(t1.description, t2.description)
         self.assertEqual(t1.amount, t2.amount)
         self.assertEqual(t1.frequency, t2.frequency)
-        self.assertEqual(sorted(t1.skip), sorted(t2.skip))
+        self.assertEqual(t1.skip.symmetric_difference(t2.skip), set())
         self.assertEqual(t1.scheduled, t2.scheduled)
         self.assertEqual(t1.cleared, t2.cleared)
 
@@ -273,7 +273,7 @@ class TestUtilityFunctions(unittest.TestCase):
             description="Weekly",
             amount=1.02,
             frequency=transaction.Transaction.WEEKLY,
-            skip=[date.today()+timedelta(days=7)],
+            skip=set([date.today()+timedelta(days=7)]),
             scheduled=True,
             cleared=True)
 

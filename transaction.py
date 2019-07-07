@@ -33,7 +33,7 @@ class Transaction(object):
             frequency = Transaction.ONCE
         self.frequency = frequency
         if skip is None:
-            skip = []
+            skip = set()
         self.skip = skip
         self.scheduled = scheduled
         self.cleared = cleared

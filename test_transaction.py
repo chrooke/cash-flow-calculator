@@ -67,6 +67,7 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(t.amount, 0.0)
         self.assertIsInstance(t.frequency, str)
         self.assertEqual(t.frequency, transaction.Transaction.ONCE)
+        self.assertIsInstance(t.skip, set)
         self.assertEqual(len(t.skip), 0,
                          f"non-empty skip : {t.skip}")
         self.assertIsInstance(t.scheduled, bool)
@@ -77,7 +78,7 @@ class TestTransaction(unittest.TestCase):
     def test_constructor_full(self):
         start = date.today()
         original_start = date.today()-timedelta(days=7)
-        skip_date = start + timedelta(days=14)
+        skip = start + timedelta(days=14)
         end = start+relativedelta(months=1)
         descr = "Test transaction"
         amt = 1.00
@@ -89,7 +90,7 @@ class TestTransaction(unittest.TestCase):
             description=descr,
             amount=amt,
             frequency=freq,
-            skip=[skip_date],
+            skip=set([skip]),
             scheduled=True,
             cleared=True)
         self.assertIsInstance(t, transaction.Transaction)
@@ -105,8 +106,9 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(t.amount, amt)
         self.assertIsInstance(t.frequency, str)
         self.assertEqual(t.frequency, freq)
+        self.assertIsInstance(t.skip, set)
         self.assertEqual(len(t.skip), 1)
-        self.assertEqual(t.skip[0], skip_date)
+        self.assertIn(skip, t.skip)
         self.assertIsInstance(t.scheduled, bool)
         self.assertTrue(t.scheduled)
         self.assertIsInstance(t.cleared, bool)
@@ -157,7 +159,7 @@ class TestTransaction(unittest.TestCase):
 
     def test_weekly_recurrence_with_skip(self):
         d = date.today()
-        self.weekly.skip.append(d+timedelta(days=7))
+        self.weekly.skip.add(d+timedelta(days=7))
 
         self.assertEqual(self.weekly.amtOn(d), 1.02)
 
@@ -204,7 +206,7 @@ class TestTransaction(unittest.TestCase):
 
     def test_biweekly_recurrence_with_skip(self):
         d = date.today()
-        self.biweekly.skip.append(d+timedelta(days=14))
+        self.biweekly.skip.add(d+timedelta(days=14))
 
         self.assertEqual(self.biweekly.amtOn(d), 1.03)
 
@@ -266,7 +268,7 @@ class TestTransaction(unittest.TestCase):
         nmp1 = (nm-d).days+1
         man = d+relativedelta(months=2)
         manm1 = (man-nm).days-1
-        self.monthly.skip.append(nm)
+        self.monthly.skip.add(nm)
 
         self.assertEqual(self.monthly.amtOn(d), 1.04)
 
@@ -328,7 +330,7 @@ class TestTransaction(unittest.TestCase):
         nqp1 = (nq-d).days+1
         qan = date.today()+relativedelta(months=6)
         qanm1 = (qan-nq).days-1
-        self.quarterly.skip.append(nq)
+        self.quarterly.skip.add(nq)
 
         self.assertEqual(self.quarterly.amtOn(d), 1.05)
 
@@ -390,7 +392,7 @@ class TestTransaction(unittest.TestCase):
         nyp1 = (ny-d).days+1
         yan = d+relativedelta(years=2)
         yanm1 = (yan-ny).days-1
-        self.annually.skip.append(ny)
+        self.annually.skip.add(ny)
 
         self.assertEqual(self.annually.amtOn(d), 1.06)
 
