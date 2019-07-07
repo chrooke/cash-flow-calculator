@@ -43,3 +43,9 @@ class TransactionStore(object):
                             if t.description == description and
                             t.amtOn(requested_date) != 0]
         return transactions
+
+    def updateRecurringStartDates(self, new_date):
+        recurring_trans = [x for x in self.store
+                           if x.frequency != transaction.Transaction.ONCE]
+        for t in recurring_trans:
+            t.updateStartDate(new_date)

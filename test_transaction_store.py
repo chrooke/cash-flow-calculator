@@ -415,30 +415,51 @@ class TestUtilityFunctions(unittest.TestCase):
     def setUp(self):
         self.ts = TransactionStore()
 
-        t1 = transaction.Transaction(
-            start=date.today(),
+        origsd1 = date.today()
+        origsd2 = date.today()+timedelta(days=2)
+        self.t1 = transaction.Transaction(
+            start=origsd1,
             description="Once, today",
             amount=1.00,
             frequency=transaction.Transaction.ONCE)
-        t2 = transaction.Transaction(
-            start=date.today()+timedelta(days=2),
+        self.t2 = transaction.Transaction(
+            start=origsd2,
             description="Once, in two days",
             amount=1.01,
             frequency=transaction.Transaction.ONCE)
-        t3 = transaction.Transaction(
-            start=date.today(),
-            end=date.today()+timedelta(days=56),
+        self.t3 = transaction.Transaction(
+            start=origsd1,
             description="Weekly",
             amount=1.02,
             frequency=transaction.Transaction.WEEKLY,
             skip=set([date.today()+timedelta(days=7)]),
             scheduled=True,
             cleared=True)
+        self.t4 = transaction.Transaction(
+            start=origsd2,
+            description="Monthly",
+            amount=1.03,
+            frequency=transaction.Transaction.MONTHLY)
 
-        self.ts.addTransactions(t1, t2, t3)
+        self.ts.addTransactions(self.t1, self.t2, self.t3, self.t4)
 
-    def test_update_all_start_dates(self):
-        pass
+    def test_update_all_recurring_start_dates(self):
+        origsd1 = date.today()
+        origsd2 = date.today()+timedelta(days=2)
+        new_sd = date.today() + timedelta(days=10)
+        new_weekly_sd = origsd1 + timedelta(days=14)
+        new_monthly_sd = origsd2 + relativedelta(months=1)
+
+        self.ts.updateRecurringStartDates(new_sd)
+
+        self.assertEqual(self.t1.start, origsd1)
+        self.assertEqual(self.t1.original_start, origsd1)
+        self.assertEqual(self.t2.start, origsd2)
+        self.assertEqual(self.t2.original_start, origsd2)
+        self.assertEqual(self.t3.start, new_weekly_sd)
+        self.assertEqual(self.t3.original_start, origsd1)
+        self.assertEqual(self.t4.start, new_monthly_sd)
+        self.assertEqual(self.t4.original_start, origsd2)
 
     def test_purge_outdated_single_transactions(self):
         pass
