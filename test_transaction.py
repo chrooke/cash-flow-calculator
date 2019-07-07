@@ -404,25 +404,32 @@ class TestTransaction(unittest.TestCase):
 
         self.assertEqual(self.annually.amtOn(yan), 1.06)
 
-    def test_start_date_change(self):
+    def test_start_date_change_non_recurring(self):
         d = date.today()
         new_base = d + timedelta(days=16)
 
-        # Test one-time
-        new_start = new_base
         self.assertEqual(self.once_today.frequency,
                          transaction.Transaction.ONCE)
         self.assertEqual(self.once_today.start_date, d)
         self.assertEqual(self.once_today.original_start_date, d)
+
         self.once_today.updateStartDate(new_base)
-        self.assertEqual(self.once_today.start_date, new_start)
+
+        self.assertEqual(self.once_today.start_date, new_base)
         self.assertEqual(self.once_today.original_start_date, d)
 
-        # Test recurring
+    def test_start_date_change_recurring(self):
+        d = date.today()
+        new_base = d + timedelta(days=16)
         new_start = d + timedelta(days=21)
+
+        self.assertEqual(self.weekly.frequency,
+                         transaction.Transaction.WEEKLY)
         self.assertEqual(self.weekly.start_date, d)
         self.assertEqual(self.weekly.original_start_date, d)
+
         self.weekly.updateStartDate(new_base)
+
         self.assertEqual(self.weekly.start_date, new_start)
         self.assertEqual(self.weekly.original_start_date, d)
 
