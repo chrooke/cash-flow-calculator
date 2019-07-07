@@ -29,5 +29,5 @@ class TransactionStore(object):
         else:
             transactions = [t for t in self.store
                             if t.description == description and
-                            t.start_date == requested_date]
+                            t.start == requested_date]
         return transactions

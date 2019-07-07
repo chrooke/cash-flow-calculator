@@ -9,13 +9,13 @@ from transaction_store import TransactionStore
 
 
 # CREATE
-class TestCreate(unittest.TestCase):
+class TestBasicCreate(unittest.TestCase):
     def test_add_single_transaction(self):
         d = date.today()
         ts = TransactionStore()
         self.assertEqual(len(ts.store), 0)
         t = transaction.Transaction(
-            start_date=d,
+            start=d,
             description="Once, today",
             amount=1.00,
             frequency=transaction.Transaction.ONCE)
@@ -24,7 +24,7 @@ class TestCreate(unittest.TestCase):
         t = next((t for t in ts.store if t.amount == 1.00),
                  None)
         self.assertIsNotNone(t)
-        self.assertEqual(t.start_date, d)
+        self.assertEqual(t.start, d)
         self.assertEqual(t.description, "Once, today")
         self.assertEqual(t.amount, 1.00)
         self.assertEqual(t.frequency, transaction.Transaction.ONCE)
@@ -33,22 +33,22 @@ class TestCreate(unittest.TestCase):
         d = date.today()
         ts = TransactionStore()
         t1 = transaction.Transaction(
-            start_date=d,
+            start=d,
             description="Once, today",
             amount=1.00,
             frequency=transaction.Transaction.ONCE)
         t2 = transaction.Transaction(
-            start_date=d+timedelta(days=2),
+            start=d+timedelta(days=2),
             description="Once, in two days",
             amount=1.01,
             frequency=transaction.Transaction.ONCE)
         t3 = transaction.Transaction(
-            start_date=d,
-            end_date=d+timedelta(days=56),
+            start=d,
+            end=d+timedelta(days=56),
             description="Weekly",
             amount=1.02,
             frequency=transaction.Transaction.WEEKLY,
-            skip_list=[d+timedelta(days=7)],
+            skip=[d+timedelta(days=7)],
             scheduled=True,
             cleared=True)
 
@@ -59,7 +59,7 @@ class TestCreate(unittest.TestCase):
         t = next((t for t in ts.store if t.amount == 1.00),
                  None)
         self.assertIsNotNone(t)
-        self.assertEqual(t.start_date, d)
+        self.assertEqual(t.start, d)
         self.assertEqual(t.description, "Once, today")
         self.assertEqual(t.amount, 1.00)
         self.assertEqual(t.frequency, transaction.Transaction.ONCE)
@@ -67,7 +67,7 @@ class TestCreate(unittest.TestCase):
         t = next((t for t in ts.store if t.amount == 1.01),
                  None)
         self.assertIsNotNone(t)
-        self.assertEqual(t.start_date, d+timedelta(days=2))
+        self.assertEqual(t.start, d+timedelta(days=2))
         self.assertEqual(t.description, "Once, in two days")
         self.assertEqual(t.amount, 1.01)
         self.assertEqual(t.frequency, transaction.Transaction.ONCE)
@@ -75,7 +75,7 @@ class TestCreate(unittest.TestCase):
         t = next((t for t in ts.store if t.amount == 1.02),
                  None)
         self.assertIsNotNone(t)
-        self.assertEqual(t.start_date, d)
+        self.assertEqual(t.start, d)
         self.assertEqual(t.description, "Weekly")
         self.assertEqual(t.amount, 1.02)
         self.assertEqual(t.frequency, transaction.Transaction.WEEKLY)
@@ -87,12 +87,12 @@ class TestRetrieveFromMultipleSingleTransactions(unittest.TestCase):
         self.ts = TransactionStore()
 
         t1 = transaction.Transaction(
-            start_date=date.today(),
+            start=date.today(),
             description="Once, today",
             amount=1.00,
             frequency=transaction.Transaction.ONCE)
         t2 = transaction.Transaction(
-            start_date=date.today()+timedelta(days=2),
+            start=date.today()+timedelta(days=2),
             description="Once, in two days",
             amount=1.01,
             frequency=transaction.Transaction.ONCE)
@@ -128,13 +128,13 @@ class TestRetrieveFromMultipleDuplicateSingleTransactions(unittest.TestCase):
         self.ts = TransactionStore()
 
         t1 = transaction.Transaction(
-            start_date=date.today(),
+            start=date.today(),
             description="Once, today",
             amount=1.00,
             frequency=transaction.Transaction.ONCE)
 
         t2 = transaction.Transaction(
-            start_date=date.today()+timedelta(days=4),
+            start=date.today()+timedelta(days=4),
             description="Once, today",
             amount=1.02,
             frequency=transaction.Transaction.ONCE)
@@ -191,18 +191,18 @@ class TestFileOperations(unittest.TestCase):
         self.file = f'./test-{time.time()}'
 
         t1 = transaction.Transaction(
-            start_date=date.today(),
+            start=date.today(),
             description="Once, today",
             amount=1.00,
             frequency=transaction.Transaction.ONCE)
         t2 = transaction.Transaction(
-            start_date=date.today(),
-            original_start_date=date.today()-timedelta(days=1),
-            end_date=date.today()+timedelta(days=56),
+            start=date.today(),
+            original_start=date.today()-timedelta(days=1),
+            end=date.today()+timedelta(days=56),
             description="Weekly",
             amount=1.02,
             frequency=transaction.Transaction.WEEKLY,
-            skip_list=[date.today()+timedelta(days=7)],
+            skip=[date.today()+timedelta(days=7)],
             scheduled=True,
             cleared=True)
 
@@ -214,13 +214,13 @@ class TestFileOperations(unittest.TestCase):
         os.remove(self.file)
 
     def assertTransactionsEqual(self, t1, t2):
-        self.assertEqual(t1.start_date, t2.start_date)
-        self.assertEqual(t1.original_start_date, t2.original_start_date)
-        self.assertEqual(t1.end_date, t2.end_date)
+        self.assertEqual(t1.start, t2.start)
+        self.assertEqual(t1.original_start, t2.original_start)
+        self.assertEqual(t1.end, t2.end)
         self.assertEqual(t1.description, t2.description)
         self.assertEqual(t1.amount, t2.amount)
         self.assertEqual(t1.frequency, t2.frequency)
-        self.assertEqual(sorted(t1.skip_list), sorted(t2.skip_list))
+        self.assertEqual(sorted(t1.skip), sorted(t2.skip))
         self.assertEqual(t1.scheduled, t2.scheduled)
         self.assertEqual(t1.cleared, t2.cleared)
 
@@ -258,22 +258,22 @@ class TestUtilityFunctions(unittest.TestCase):
         self.ts = TransactionStore()
 
         t1 = transaction.Transaction(
-            start_date=date.today(),
+            start=date.today(),
             description="Once, today",
             amount=1.00,
             frequency=transaction.Transaction.ONCE)
         t2 = transaction.Transaction(
-            start_date=date.today()+timedelta(days=2),
+            start=date.today()+timedelta(days=2),
             description="Once, in two days",
             amount=1.01,
             frequency=transaction.Transaction.ONCE)
         t3 = transaction.Transaction(
-            start_date=date.today(),
-            end_date=date.today()+timedelta(days=56),
+            start=date.today(),
+            end=date.today()+timedelta(days=56),
             description="Weekly",
             amount=1.02,
             frequency=transaction.Transaction.WEEKLY,
-            skip_list=[date.today()+timedelta(days=7)],
+            skip=[date.today()+timedelta(days=7)],
             scheduled=True,
             cleared=True)
 
