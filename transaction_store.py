@@ -9,9 +9,21 @@ class TransactionStore(object):
     def __init__(self):
         self.store = []
 
-    def add(self, first_transaction, *remaining_transactions):
+    def addTransactions(self, first_transaction, *remaining_transactions):
         self.store.append(first_transaction)
         self.store = self.store + list(remaining_transactions)
+
+    def replaceTransaction(self, old, new):
+        self.removeTransactions(old)
+        self.addTransactions(new)
+
+    def removeTransactions(self, first_transaction, *remaining_transactions):
+        try:
+            self.store.remove(first_transaction)
+            for t in remaining_transactions:
+                self.store.remove(t)
+        except ValueError:
+            pass
 
     def saveTransactions(self, file):
         with open(file, "w") as f:
@@ -31,7 +43,3 @@ class TransactionStore(object):
                             if t.description == description and
                             t.start == requested_date]
         return transactions
-
-    def replaceTransaction(self, old, new):
-        self.store.remove(old)
-        self.store.append(new)

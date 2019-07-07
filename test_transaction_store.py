@@ -19,7 +19,7 @@ class TestBasicCreate(unittest.TestCase):
             description="Once, today",
             amount=1.00,
             frequency=transaction.Transaction.ONCE)
-        ts.add(t)
+        ts.addTransactions(t)
         self.assertEqual(len(ts.store), 1)
         t = next((t for t in ts.store if t.amount == 1.00),
                  None)
@@ -54,7 +54,7 @@ class TestBasicCreate(unittest.TestCase):
 
         self.assertEqual(len(ts.store), 0)
 
-        ts.add(t1, t2, t3)
+        ts.addTransactions(t1, t2, t3)
 
         t = next((t for t in ts.store if t.amount == 1.00),
                  None)
@@ -97,7 +97,7 @@ class TestRetrieveFromMultipleSingleTransactions(unittest.TestCase):
             amount=1.01,
             frequency=transaction.Transaction.ONCE)
 
-        self.ts.add(t1, t2)
+        self.ts.addTransactions(t1, t2)
 
     def test_retrieve_non_existent_transaction(self):
         t_list = self.ts.getTransaction("Transaction does not exist")
@@ -139,7 +139,7 @@ class TestRetrieveFromMultipleDuplicateSingleTransactions(unittest.TestCase):
             amount=1.02,
             frequency=transaction.Transaction.ONCE)
 
-        self.ts.add(t1, t2)
+        self.ts.addTransactions(t1, t2)
 
     def test_retrieve_no_date_given(self):
         t_list = self.ts.getTransaction("Once, today")
@@ -180,7 +180,7 @@ class TestBasicUpdate(unittest.TestCase):
             amount=1.00,
             frequency=transaction.Transaction.ONCE)
 
-        self.ts.add(t1)
+        self.ts.addTransactions(t1)
 
     def test_replace(self):
         ts = self.ts.getTransaction("Once")
@@ -196,8 +196,87 @@ class TestBasicUpdate(unittest.TestCase):
 
 
 # DELETE
-class TestDelete(unittest.TestCase):
-    pass
+class TestBasicDelete(unittest.TestCase):
+    def setUp(self):
+        self.ts = TransactionStore()
+
+        t1 = transaction.Transaction(
+            start=date.today(),
+            description="Once",
+            amount=1.00,
+            frequency=transaction.Transaction.ONCE)
+        t2 = transaction.Transaction(
+            start=date.today()+timedelta(days=2),
+            description="Once, in two days",
+            amount=1.01,
+            frequency=transaction.Transaction.ONCE)
+        t3 = transaction.Transaction(
+            start=date.today(),
+            end=date.today()+timedelta(days=56),
+            description="Weekly",
+            amount=1.02,
+            frequency=transaction.Transaction.WEEKLY,
+            skip=set([date.today()+timedelta(days=7)]),
+            scheduled=True,
+            cleared=True)
+
+        self.ts.addTransactions(t1, t2, t3)
+
+    def test_remove_existing_single_transaction(self):
+        self.assertEqual(len(self.ts.store), 3)
+        t_list = self.ts.getTransaction("Once")
+        self.assertEqual(len(t_list), 1)
+        t1 = t_list[0]
+        self.ts.removeTransactions(t1)
+        self.assertEqual(len(self.ts.store), 2)
+        t_list = self.ts.getTransaction("Once")
+        self.assertEqual(len(t_list), 0)
+
+    def test_remove_existing_multiple_transactions(self):
+        self.assertEqual(len(self.ts.store), 3)
+        t_list = self.ts.getTransaction("Once")
+        self.assertEqual(len(t_list), 1)
+        t1 = t_list[0]
+        t_list = self.ts.getTransaction("Weekly")
+        self.assertEqual(len(t_list), 1)
+        t2 = t_list[0]
+        self.ts.removeTransactions(t1, t2)
+        self.assertEqual(len(self.ts.store), 1)
+        t_list = self.ts.getTransaction("Once")
+        self.assertEqual(len(t_list), 0)
+        t_list = self.ts.getTransaction("Weekly")
+        self.assertEqual(len(t_list), 0)
+
+    def test_remove_non_existent_single_transaction(self):
+        t_missing = transaction.Transaction(
+                start=date.today(),
+                description="Missing",
+                amount=1.00,
+                frequency=transaction.Transaction.ONCE)
+        self.assertEqual(len(self.ts.store), 3)
+        self.ts.removeTransactions(t_missing)
+        self.assertEqual(len(self.ts.store), 3)
+
+    def test_remove_multiple_transactions_with_some_missing(self):
+        t_missing = transaction.Transaction(
+                start=date.today(),
+                description="Missing",
+                amount=1.00,
+                frequency=transaction.Transaction.ONCE)
+
+        self.assertEqual(len(self.ts.store), 3)
+        t_list = self.ts.getTransaction("Once")
+        self.assertEqual(len(t_list), 1)
+        t1 = t_list[0]
+        t_list = self.ts.getTransaction("Weekly")
+        self.assertEqual(len(t_list), 1)
+        t2 = t_list[0]
+        self.ts.removeTransactions(t1, t2, t_missing)
+        self.assertEqual(len(self.ts.store), 1)
+        t_list = self.ts.getTransaction("Once")
+        self.assertEqual(len(t_list), 0)
+        t_list = self.ts.getTransaction("Weekly")
+        self.assertEqual(len(t_list), 0)
 
 
 # MISC
@@ -298,7 +377,7 @@ class TestUtilityFunctions(unittest.TestCase):
             scheduled=True,
             cleared=True)
 
-        self.ts.add(t1, t2, t3)
+        self.ts.addTransactions(t1, t2, t3)
 
     def test_update_all_start_dates(self):
         pass
