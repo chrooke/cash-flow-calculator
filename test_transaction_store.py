@@ -169,6 +169,64 @@ class TestRetrieveFromMultipleDuplicateSingleTransactions(unittest.TestCase):
         self.assertEqual(len(t_list), 0)
 
 
+class TestRetrieveFromMultipleRecurringTransactions(unittest.TestCase):
+    def setUp(self):
+        self.ts = TransactionStore()
+
+        sd = date.today()
+        skipd = date.today() + timedelta(days=14)
+        t1 = transaction.Transaction(
+            start=sd,
+            description="Weekly",
+            amount=1.00,
+            frequency=transaction.Transaction.WEEKLY,
+            skip=set([skipd]))
+        t2 = transaction.Transaction(
+            start=sd+timedelta(days=2),
+            description="Monthly",
+            amount=1.01,
+            frequency=transaction.Transaction.MONTHLY)
+
+        self.ts.addTransactions(t1, t2)
+
+    def test_retrieve_non_existent_transaction(self):
+        t_list = self.ts.getTransaction("Transaction does not exist")
+        self.assertEqual(len(t_list), 0)
+
+    def test_retrieve_no_date_given(self):
+        t_list = self.ts.getTransaction("Weekly")
+        self.assertEqual(len(t_list), 1)
+        self.assertEqual(t_list[0].description, "Weekly")
+
+    def test_retrieve_good_start_date_given(self):
+        retrieve_date = date.today()
+        t_list = self.ts.getTransaction("Weekly",
+                                        requested_date=retrieve_date)
+        self.assertEqual(len(t_list), 1)
+        self.assertEqual(t_list[0].description, "Weekly")
+        self.assertEqual(t_list[0].amount, 1.00)
+
+    def test_retrieve_good_future_date_given(self):
+        retrieve_date = date.today() + timedelta(days=21)
+        t_list = self.ts.getTransaction("Weekly",
+                                        requested_date=retrieve_date)
+        self.assertEqual(len(t_list), 1)
+        self.assertEqual(t_list[0].description, "Weekly")
+        self.assertEqual(t_list[0].amount, 1.00)
+
+    def test_retrieve_skip_date_given(self):
+        retrieve_date = date.today() + timedelta(days=14)
+        t_list = self.ts.getTransaction("Weekly",
+                                        requested_date=retrieve_date)
+        self.assertEqual(len(t_list), 0)
+
+    def test_retrieve_bad_date_given(self):
+        retrieve_date = date.today() + timedelta(days=3)
+        t_list = self.ts.getTransaction("Weekly",
+                                        requested_date=retrieve_date)
+        self.assertEqual(len(t_list), 0)
+
+
 # UPDATE (replace old with new)
 class TestBasicUpdate(unittest.TestCase):
     def setUp(self):

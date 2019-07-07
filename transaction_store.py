@@ -41,5 +41,5 @@ class TransactionStore(object):
         else:
             transactions = [t for t in self.store
                             if t.description == description and
-                            t.start == requested_date]
+                            t.amtOn(requested_date) != 0]
         return transactions
