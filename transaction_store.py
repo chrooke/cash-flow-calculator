@@ -20,3 +20,14 @@ class TransactionStore(object):
     def loadTransactions(self, file):
         with open(file, "r") as f:
             self.store = yaml.full_load(f)
+
+    def getTransaction(self, description, requested_date=None):
+        # Currently does not handle recurring/overridden transactions
+        if requested_date is None:
+            transactions = [t for t in self.store
+                            if t.description == description]
+        else:
+            transactions = [t for t in self.store
+                            if t.description == description and
+                            t.start_date == requested_date]
+        return transactions
