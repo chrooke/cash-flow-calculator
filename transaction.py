@@ -64,6 +64,15 @@ class Transaction(object):
                     return 0
             date = self._step_to_next_date(date)
 
+    def updateStartDate(self, base_date):
+        if (self.frequency == Transaction.ONCE):
+            date = base_date
+        else:
+            date = self.start_date
+            while date < base_date:
+                date = self._step_to_next_date(date)
+        self.start_date = date
+
     def _add_week(self, d):
         return d+timedelta(days=7)
 
