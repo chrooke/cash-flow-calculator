@@ -2,22 +2,23 @@
 import unittest
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
-import transaction
+import context
+from cash_flow.transaction import Transaction
 
 
 class TestConstructor(unittest.TestCase):
 
     def test_class_constants(self):
-        self.assertEqual(transaction.Transaction.ONCE, "O")
-        self.assertEqual(transaction.Transaction.WEEKLY, "W")
-        self.assertEqual(transaction.Transaction.BIWEEKLY, "2W")
-        self.assertEqual(transaction.Transaction.MONTHLY, "M")
-        self.assertEqual(transaction.Transaction.QUARTERLY, "Q")
-        self.assertEqual(transaction.Transaction.ANNUALLY, "A")
+        self.assertEqual(Transaction.ONCE, "O")
+        self.assertEqual(Transaction.WEEKLY, "W")
+        self.assertEqual(Transaction.BIWEEKLY, "2W")
+        self.assertEqual(Transaction.MONTHLY, "M")
+        self.assertEqual(Transaction.QUARTERLY, "Q")
+        self.assertEqual(Transaction.ANNUALLY, "A")
 
     def test_constructor_empty(self):
-        t = transaction.Transaction()
-        self.assertIsInstance(t, transaction.Transaction)
+        t = Transaction()
+        self.assertIsInstance(t, Transaction)
         self.assertIsInstance(t.start, date)
         self.assertEqual(t.start, date.today())
         self.assertIsInstance(t.original_start, date)
@@ -29,7 +30,7 @@ class TestConstructor(unittest.TestCase):
         self.assertIsInstance(t.amount, float)
         self.assertEqual(t.amount, 0.0)
         self.assertIsInstance(t.frequency, str)
-        self.assertEqual(t.frequency, transaction.Transaction.ONCE)
+        self.assertEqual(t.frequency, Transaction.ONCE)
         self.assertIsInstance(t.skip, set)
         self.assertEqual(len(t.skip), 0,
                          f"non-empty skip : {t.skip}")
@@ -45,8 +46,8 @@ class TestConstructor(unittest.TestCase):
         end = start+relativedelta(months=1)
         descr = "Test transaction"
         amt = 1.00
-        freq = transaction.Transaction.WEEKLY
-        t = transaction.Transaction(
+        freq = Transaction.WEEKLY
+        t = Transaction(
             start=start,
             original_start=original_start,
             end=end,
@@ -56,7 +57,7 @@ class TestConstructor(unittest.TestCase):
             skip=set([skip]),
             scheduled=True,
             cleared=True)
-        self.assertIsInstance(t, transaction.Transaction)
+        self.assertIsInstance(t, Transaction)
         self.assertIsInstance(t.start, date)
         self.assertEqual(t.start, start)
         self.assertIsInstance(t.original_start, date)
@@ -81,13 +82,13 @@ class TestConstructor(unittest.TestCase):
 class TestDuplicateTransaction(unittest.TestCase):
     def setUp(self):
         sd = date.today()
-        self.t1 = transaction.Transaction(
+        self.t1 = Transaction(
             start=sd,
             original_start=sd-timedelta(days=1),
             end=sd+timedelta(days=56),
             description="Weekly",
             amount=1.02,
-            frequency=transaction.Transaction.WEEKLY,
+            frequency=Transaction.WEEKLY,
             skip=set([sd+timedelta(days=7)]),
             scheduled=True,
             cleared=True)
@@ -125,11 +126,11 @@ class TestRecurrence(unittest.TestCase):
 
 class TestWeeklyRecurrence(TestRecurrence):
     def setUp(self):
-        self.t = transaction.Transaction(
+        self.t = Transaction(
             start=date.today(),
             description="Weekly",
             amount=1.02,
-            frequency=transaction.Transaction.WEEKLY)
+            frequency=Transaction.WEEKLY)
         self.sd = self.t.start
         self.nw = self.sd + timedelta(days=7)
         self.nw_days = (self.nw-self.sd).days
@@ -166,11 +167,11 @@ class TestWeeklyRecurrence(TestRecurrence):
 
 class TestBiweeklyRecurrence(TestRecurrence):
     def setUp(self):
-        self.t = transaction.Transaction(
+        self.t = Transaction(
             start=date.today(),
             description="Biweekly",
             amount=1.03,
-            frequency=transaction.Transaction.BIWEEKLY)
+            frequency=Transaction.BIWEEKLY)
         self.sd = self.t.start
         self.nbw = self.sd + timedelta(days=14)
         self.nbw_days = (self.nbw-self.sd).days
@@ -207,11 +208,11 @@ class TestBiweeklyRecurrence(TestRecurrence):
 
 class TestMonthlyRecurrence(TestRecurrence):
     def setUp(self):
-        self.t = transaction.Transaction(
+        self.t = Transaction(
             start=date.today(),
             description="Monthly",
             amount=1.04,
-            frequency=transaction.Transaction.MONTHLY)
+            frequency=Transaction.MONTHLY)
         self.sd = self.t.start
         self.nm = self.sd + relativedelta(months=1)
         self.nm_days = (self.nm-self.sd).days
@@ -248,11 +249,11 @@ class TestMonthlyRecurrence(TestRecurrence):
 
 class TestQuarterlyRecurrence(TestRecurrence):
     def setUp(self):
-        self.t = transaction.Transaction(
+        self.t = Transaction(
             start=date.today(),
             description="Quarterly",
             amount=1.05,
-            frequency=transaction.Transaction.QUARTERLY)
+            frequency=Transaction.QUARTERLY)
         self.sd = self.t.start
         self.nq = self.sd + relativedelta(months=3)
         self.nq_days = (self.nq-self.sd).days
@@ -289,11 +290,11 @@ class TestQuarterlyRecurrence(TestRecurrence):
 
 class TestAnnualRecurrence(TestRecurrence):
     def setUp(self):
-        self.t = transaction.Transaction(
+        self.t = Transaction(
             start=date.today(),
             description="Annually",
             amount=1.06,
-            frequency=transaction.Transaction.ANNUALLY)
+            frequency=Transaction.ANNUALLY)
         self.sd = self.t.start
         self.ny = self.sd + relativedelta(years=1)
         self.ny_days = (self.ny-self.sd).days
@@ -334,16 +335,16 @@ class TestOneTimeTransactionHits(unittest.TestCase):
         self.sdp1 = self.sd + timedelta(days=1)
         self.sdp2 = self.sd + timedelta(days=2)
         self.sdp3 = self.sd + timedelta(days=3)
-        self.t1 = transaction.Transaction(
+        self.t1 = Transaction(
             start=self.sd,
             description="Once, today",
             amount=1.00,
-            frequency=transaction.Transaction.ONCE)
-        self.t2 = transaction.Transaction(
+            frequency=Transaction.ONCE)
+        self.t2 = Transaction(
             start=self.sdp2,
             description="Once, in two days",
             amount=1.01,
-            frequency=transaction.Transaction.ONCE)
+            frequency=Transaction.ONCE)
 
     def test_start_date_hits(self):
         self.assertEqual(self.t1.amtOn(self.sd), self.t1.amount)
@@ -360,22 +361,22 @@ class TestStartDateChange(unittest.TestCase):
 
     def setUp(self):
         self.sd = date.today()
-        self.t1 = transaction.Transaction(
+        self.t1 = Transaction(
             start=self.sd,
             description="Once, today",
             amount=1.00,
-            frequency=transaction.Transaction.ONCE)
-        self.t2 = transaction.Transaction(
+            frequency=Transaction.ONCE)
+        self.t2 = Transaction(
             start=self.sd,
             description="Weekly",
             amount=1.02,
-            frequency=transaction.Transaction.WEEKLY)
+            frequency=Transaction.WEEKLY)
 
     def test_start_date_change_non_recurring(self):
         new_base = self.sd + timedelta(days=16)
 
         self.assertEqual(self.t1.frequency,
-                         transaction.Transaction.ONCE)
+                         Transaction.ONCE)
         self.assertEqual(self.t1.start, self.sd)
         self.assertEqual(self.t1.original_start, self.sd)
 
@@ -389,7 +390,7 @@ class TestStartDateChange(unittest.TestCase):
         new_start = self.sd + timedelta(days=21)
 
         self.assertEqual(self.t2.frequency,
-                         transaction.Transaction.WEEKLY)
+                         Transaction.WEEKLY)
         self.assertEqual(self.t2.start, self.sd)
         self.assertEqual(self.t2.original_start, self.sd)
 

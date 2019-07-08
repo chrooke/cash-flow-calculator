@@ -4,8 +4,9 @@ import time
 import os
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
-import transaction
-from transaction_store import TransactionStore
+import context
+from cash_flow.transaction import Transaction
+from cash_flow.transaction_store import TransactionStore
 
 
 # CREATE
@@ -14,11 +15,11 @@ class TestBasicCreate(unittest.TestCase):
         d = date.today()
         ts = TransactionStore()
         self.assertEqual(len(ts.store), 0)
-        t = transaction.Transaction(
+        t = Transaction(
             start=d,
             description="Once, today",
             amount=1.00,
-            frequency=transaction.Transaction.ONCE)
+            frequency=Transaction.ONCE)
         ts.addTransactions(t)
         self.assertEqual(len(ts.store), 1)
         t = next((t for t in ts.store if t.amount == 1.00),
@@ -27,27 +28,27 @@ class TestBasicCreate(unittest.TestCase):
         self.assertEqual(t.start, d)
         self.assertEqual(t.description, "Once, today")
         self.assertEqual(t.amount, 1.00)
-        self.assertEqual(t.frequency, transaction.Transaction.ONCE)
+        self.assertEqual(t.frequency, Transaction.ONCE)
 
     def test_add_multiple_transactions(self):
         d = date.today()
         ts = TransactionStore()
-        t1 = transaction.Transaction(
+        t1 = Transaction(
             start=d,
             description="Once, today",
             amount=1.00,
-            frequency=transaction.Transaction.ONCE)
-        t2 = transaction.Transaction(
+            frequency=Transaction.ONCE)
+        t2 = Transaction(
             start=d+timedelta(days=2),
             description="Once, in two days",
             amount=1.01,
-            frequency=transaction.Transaction.ONCE)
-        t3 = transaction.Transaction(
+            frequency=Transaction.ONCE)
+        t3 = Transaction(
             start=d,
             end=d+timedelta(days=56),
             description="Weekly",
             amount=1.02,
-            frequency=transaction.Transaction.WEEKLY,
+            frequency=Transaction.WEEKLY,
             skip=set([d+timedelta(days=7)]),
             scheduled=True,
             cleared=True)
@@ -62,7 +63,7 @@ class TestBasicCreate(unittest.TestCase):
         self.assertEqual(t.start, d)
         self.assertEqual(t.description, "Once, today")
         self.assertEqual(t.amount, 1.00)
-        self.assertEqual(t.frequency, transaction.Transaction.ONCE)
+        self.assertEqual(t.frequency, Transaction.ONCE)
 
         t = next((t for t in ts.store if t.amount == 1.01),
                  None)
@@ -70,7 +71,7 @@ class TestBasicCreate(unittest.TestCase):
         self.assertEqual(t.start, d+timedelta(days=2))
         self.assertEqual(t.description, "Once, in two days")
         self.assertEqual(t.amount, 1.01)
-        self.assertEqual(t.frequency, transaction.Transaction.ONCE)
+        self.assertEqual(t.frequency, Transaction.ONCE)
 
         t = next((t for t in ts.store if t.amount == 1.02),
                  None)
@@ -78,7 +79,7 @@ class TestBasicCreate(unittest.TestCase):
         self.assertEqual(t.start, d)
         self.assertEqual(t.description, "Weekly")
         self.assertEqual(t.amount, 1.02)
-        self.assertEqual(t.frequency, transaction.Transaction.WEEKLY)
+        self.assertEqual(t.frequency, Transaction.WEEKLY)
 
 
 # READ
@@ -86,16 +87,16 @@ class TestRetrieveFromMultipleSingleTransactions(unittest.TestCase):
     def setUp(self):
         self.ts = TransactionStore()
 
-        t1 = transaction.Transaction(
+        t1 = Transaction(
             start=date.today(),
             description="Once, today",
             amount=1.00,
-            frequency=transaction.Transaction.ONCE)
-        t2 = transaction.Transaction(
+            frequency=Transaction.ONCE)
+        t2 = Transaction(
             start=date.today()+timedelta(days=2),
             description="Once, in two days",
             amount=1.01,
-            frequency=transaction.Transaction.ONCE)
+            frequency=Transaction.ONCE)
 
         self.ts.addTransactions(t1, t2)
 
@@ -127,17 +128,17 @@ class TestRetrieveFromMultipleDuplicateSingleTransactions(unittest.TestCase):
     def setUp(self):
         self.ts = TransactionStore()
 
-        t1 = transaction.Transaction(
+        t1 = Transaction(
             start=date.today(),
             description="Once, today",
             amount=1.00,
-            frequency=transaction.Transaction.ONCE)
+            frequency=Transaction.ONCE)
 
-        t2 = transaction.Transaction(
+        t2 = Transaction(
             start=date.today()+timedelta(days=4),
             description="Once, today",
             amount=1.02,
-            frequency=transaction.Transaction.ONCE)
+            frequency=Transaction.ONCE)
 
         self.ts.addTransactions(t1, t2)
 
@@ -175,17 +176,17 @@ class TestRetrieveFromMultipleRecurringTransactions(unittest.TestCase):
 
         sd = date.today()
         skipd = date.today() + timedelta(days=14)
-        t1 = transaction.Transaction(
+        t1 = Transaction(
             start=sd,
             description="Weekly",
             amount=1.00,
-            frequency=transaction.Transaction.WEEKLY,
+            frequency=Transaction.WEEKLY,
             skip=set([skipd]))
-        t2 = transaction.Transaction(
+        t2 = Transaction(
             start=sd+timedelta(days=2),
             description="Monthly",
             amount=1.01,
-            frequency=transaction.Transaction.MONTHLY)
+            frequency=Transaction.MONTHLY)
 
         self.ts.addTransactions(t1, t2)
 
@@ -232,11 +233,11 @@ class TestBasicUpdate(unittest.TestCase):
     def setUp(self):
         self.ts = TransactionStore()
 
-        t1 = transaction.Transaction(
+        t1 = Transaction(
             start=date.today(),
             description="Once",
             amount=1.00,
-            frequency=transaction.Transaction.ONCE)
+            frequency=Transaction.ONCE)
 
         self.ts.addTransactions(t1)
 
@@ -258,22 +259,22 @@ class TestBasicDelete(unittest.TestCase):
     def setUp(self):
         self.ts = TransactionStore()
 
-        t1 = transaction.Transaction(
+        t1 = Transaction(
             start=date.today(),
             description="Once",
             amount=1.00,
-            frequency=transaction.Transaction.ONCE)
-        t2 = transaction.Transaction(
+            frequency=Transaction.ONCE)
+        t2 = Transaction(
             start=date.today()+timedelta(days=2),
             description="Once, in two days",
             amount=1.01,
-            frequency=transaction.Transaction.ONCE)
-        t3 = transaction.Transaction(
+            frequency=Transaction.ONCE)
+        t3 = Transaction(
             start=date.today(),
             end=date.today()+timedelta(days=56),
             description="Weekly",
             amount=1.02,
-            frequency=transaction.Transaction.WEEKLY,
+            frequency=Transaction.WEEKLY,
             skip=set([date.today()+timedelta(days=7)]),
             scheduled=True,
             cleared=True)
@@ -306,21 +307,21 @@ class TestBasicDelete(unittest.TestCase):
         self.assertEqual(len(t_list), 0)
 
     def test_remove_non_existent_single_transaction(self):
-        t_missing = transaction.Transaction(
+        t_missing = Transaction(
                 start=date.today(),
                 description="Missing",
                 amount=1.00,
-                frequency=transaction.Transaction.ONCE)
+                frequency=Transaction.ONCE)
         self.assertEqual(len(self.ts.store), 3)
         self.ts.removeTransactions(t_missing)
         self.assertEqual(len(self.ts.store), 3)
 
     def test_remove_multiple_transactions_with_some_missing(self):
-        t_missing = transaction.Transaction(
+        t_missing = Transaction(
                 start=date.today(),
                 description="Missing",
                 amount=1.00,
-                frequency=transaction.Transaction.ONCE)
+                frequency=Transaction.ONCE)
 
         self.assertEqual(len(self.ts.store), 3)
         t_list = self.ts.getTransaction("Once")
@@ -348,18 +349,18 @@ class TestFileOperations(unittest.TestCase):
     def setUp(self):
         self.file = f'./test-{time.time()}'
 
-        t1 = transaction.Transaction(
+        t1 = Transaction(
             start=date.today(),
             description="Once, today",
             amount=1.00,
-            frequency=transaction.Transaction.ONCE)
-        t2 = transaction.Transaction(
+            frequency=Transaction.ONCE)
+        t2 = Transaction(
             start=date.today(),
             original_start=date.today()-timedelta(days=1),
             end=date.today()+timedelta(days=56),
             description="Weekly",
             amount=1.02,
-            frequency=transaction.Transaction.WEEKLY,
+            frequency=Transaction.WEEKLY,
             skip=set([date.today()+timedelta(days=7)]),
             scheduled=True,
             cleared=True)
@@ -417,29 +418,29 @@ class TestUtilityFunctions(unittest.TestCase):
 
         origsd1 = date.today()
         origsd2 = date.today()+timedelta(days=2)
-        self.t1 = transaction.Transaction(
+        self.t1 = Transaction(
             start=origsd1,
             description="Once, today",
             amount=1.00,
-            frequency=transaction.Transaction.ONCE)
-        self.t2 = transaction.Transaction(
+            frequency=Transaction.ONCE)
+        self.t2 = Transaction(
             start=origsd2,
             description="Once, in two days",
             amount=1.01,
-            frequency=transaction.Transaction.ONCE)
-        self.t3 = transaction.Transaction(
+            frequency=Transaction.ONCE)
+        self.t3 = Transaction(
             start=origsd1,
             description="Weekly",
             amount=1.02,
-            frequency=transaction.Transaction.WEEKLY,
+            frequency=Transaction.WEEKLY,
             skip=set([date.today()+timedelta(days=7)]),
             scheduled=True,
             cleared=True)
-        self.t4 = transaction.Transaction(
+        self.t4 = Transaction(
             start=origsd2,
             description="Monthly",
             amount=1.03,
-            frequency=transaction.Transaction.MONTHLY)
+            frequency=Transaction.MONTHLY)
 
         self.ts.addTransactions(self.t1, self.t2, self.t3, self.t4)
 

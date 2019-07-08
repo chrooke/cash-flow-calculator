@@ -2,7 +2,7 @@
 import yaml
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
-import transaction
+from cash_flow.transaction import Transaction
 
 
 class TransactionStore(object):
@@ -46,13 +46,13 @@ class TransactionStore(object):
 
     def updateRecurringStartDates(self, new_date):
         recurring_trans = [x for x in self.store
-                           if x.frequency != transaction.Transaction.ONCE]
+                           if x.frequency != Transaction.ONCE]
         for t in recurring_trans:
             t.updateStartDate(new_date)
 
     def purgeSingleBefore(self, purge_date):
         single_trans = [x for x in self.store
-                        if x.frequency == transaction.Transaction.ONCE]
+                        if x.frequency == Transaction.ONCE]
         for t in single_trans:
             if t.start < purge_date:
                 self.removeTransactions(t)
