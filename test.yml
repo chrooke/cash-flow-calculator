@@ -1,0 +1,30 @@
+- !!python/object:cash_flow.transaction.Transaction
+  amount: '1600'
+  cleared: false
+  description: Mortgage
+  end: null
+  frequency: M
+  original_start: 2019-07-14
+  scheduled: true
+  skip: !!set {}
+  start: 2019-08-07
+- !!python/object:cash_flow.transaction.Transaction
+  amount: '3500'
+  cleared: false
+  description: paycheck
+  end: null
+  frequency: 2W
+  original_start: 2019-07-14
+  scheduled: false
+  skip: !!set {}
+  start: 2019-07-19
+- !!python/object:cash_flow.transaction.Transaction
+  amount: '-500'
+  cleared: false
+  description: weekly expense
+  end: null
+  frequency: W
+  original_start: 2019-07-14
+  scheduled: false
+  skip: !!set {}
+  start: 2019-07-19

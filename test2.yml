@@ -1,0 +1,10 @@
+- !!python/object:cash_flow.transaction.Transaction
+  amount: '0.0'
+  cleared: false
+  description: <Description>
+  end: null
+  frequency: O
+  original_start: 2019-07-14
+  scheduled: false
+  skip: !!set {}
+  start: 2019-07-14
