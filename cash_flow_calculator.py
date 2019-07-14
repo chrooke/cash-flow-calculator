@@ -187,6 +187,7 @@ class MainFrame(wx.Frame):
     def __init__(self):
         super().__init__(parent=None, title='Cash Flow Calculator')
         self.transactionManagement = TransactionManagement(self)
+        self.SetInitialSize(wx.Size(500, 1000))
         self.Show()
 
 
