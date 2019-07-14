@@ -51,6 +51,16 @@ class TransactionManagement(wx.Panel):
         t = Transaction()
         self.editTransaction(event, t)
 
+    def deleteTransaction(self, trans):
+        self.ts.removeTransactions(trans)
+        self.t_list_sizer.Clear()
+        for t in self.transaction_buttons:
+            self.transaction_buttons[t].Destroy()
+        self.transaction_buttons = {}
+        for t in self.ts.getTransactions():
+            self.updateButtonForTransaction(t)
+        self.main_sizer.Layout()
+
     def updateButtonForTransaction(self, t):
         label = f'{t.description} {t.amount} {t.start}'
         if t in self.transaction_buttons:
@@ -129,6 +139,14 @@ class EditTransactionPanel(wx.Panel):
 
         self.main_sizer.Add(action_button_sizer, 0)
 
+        # Delete Button
+        delete_button_sizer = wx.BoxSizer()
+        delete = wx.Button(self, label="Delete")
+        delete.Bind(wx.EVT_BUTTON, self.deleteTransaction)
+        delete_button_sizer.Add(delete, 0)
+
+        self.main_sizer.Add(delete_button_sizer, 0)
+
         self.setValues()
 
         self.SetSizer(self.main_sizer)
@@ -158,6 +176,10 @@ class EditTransactionPanel(wx.Panel):
         self.transaction.scheduled = self.scheduled.GetValue()
         self.transaction.cleared = self.cleared.GetValue()
         self.parent.updateButtonForTransaction(self.transaction)
+        self.parent.clearEditPane()
+
+    def deleteTransaction(self, event):
+        self.parent.deleteTransaction(self.transaction)
         self.parent.clearEditPane()
 
 
