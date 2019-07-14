@@ -26,7 +26,7 @@ class TestConstructor(unittest.TestCase):
         self.assertIsNone(t.end,
                           f"end not None: {t.end}")
         self.assertIsInstance(t.description, str)
-        self.assertEqual(t.description, "")
+        self.assertEqual(t.description, "<Description>")
         self.assertIsInstance(t.amount, float)
         self.assertEqual(t.amount, 0.0)
         self.assertIsInstance(t.frequency, str)

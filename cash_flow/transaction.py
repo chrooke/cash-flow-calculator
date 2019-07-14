@@ -16,7 +16,7 @@ class Transaction(object):
                  start=date.today(),
                  original_start=None,
                  end=None,
-                 description="",
+                 description="<Description>",
                  amount=0.00,
                  frequency=None,
                  skip=None,
