@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import wx
 import wx.adv
 from datetime import date, timedelta
@@ -10,27 +11,18 @@ from cash_flow.cash_flow import CashFlow
 class TransactionManagement(wx.Panel):
     def __init__(self, parent):
         super().__init__(parent)
-
         self.ts = TransactionStore()
-
+        self.file = None
         self.editPane1 = None
         self.transaction_buttons = {}
-
         self.main_sizer = wx.BoxSizer(wx.HORIZONTAL)
-
         self.left_side_sizer = wx.BoxSizer(wx.VERTICAL)
         self.t_list_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        for t in self.ts.getTransactions():
-            self.updateButtonForTransaction(t)
-
         self.left_side_sizer.Add(self.t_list_sizer, 0)
         btn = wx.Button(self, label='New Transaction')
         btn.Bind(wx.EVT_BUTTON, self.newTransaction)
         self.left_side_sizer.Add(btn, 0)
-
         self.main_sizer.Add(self.left_side_sizer, 0)
-
         self.SetSizer(self.main_sizer)
 
     def clearEditPane(self):
@@ -40,6 +32,28 @@ class TransactionManagement(wx.Panel):
                 self.editPane1.Destroy()
                 self.editPane1 = None
             self.main_sizer.Layout()
+
+    def rebuildTransactionButtons(self):
+        self.t_list_sizer.Clear()
+        for t in self.transaction_buttons:
+            self.transaction_buttons[t].Destroy()
+        self.transaction_buttons = {}
+        for t in self.ts.getTransactions():
+            self.updateButtonForTransaction(t)
+        self.main_sizer.Layout()
+
+    def loadTransactions(self, file=None):
+        self.ts = TransactionStore()
+        if file:
+            self.ts.loadTransactions(file)
+            self.file = file
+        self.rebuildTransactionButtons()
+
+    def saveTransactions(self, file=None):
+        if file is None:
+            file = self.file
+        self.file = file
+        self.ts.saveTransactions(file)
 
     def editTransaction(self, event, trans):
         self.clearEditPane()
@@ -53,13 +67,7 @@ class TransactionManagement(wx.Panel):
 
     def deleteTransaction(self, trans):
         self.ts.removeTransactions(trans)
-        self.t_list_sizer.Clear()
-        for t in self.transaction_buttons:
-            self.transaction_buttons[t].Destroy()
-        self.transaction_buttons = {}
-        for t in self.ts.getTransactions():
-            self.updateButtonForTransaction(t)
-        self.main_sizer.Layout()
+        self.rebuildTransactionButtons()
 
     def updateButtonForTransaction(self, t):
         label = f'{t.description} {t.amount} {t.start}'
@@ -184,11 +192,91 @@ class EditTransactionPanel(wx.Panel):
 
 
 class MainFrame(wx.Frame):
+    WILDCARD = "YAML (*.yml)|*.yml|"     \
+               "All files (*.*)|*.*"
+
     def __init__(self):
         super().__init__(parent=None, title='Cash Flow Calculator')
         self.transactionManagement = TransactionManagement(self)
-        self.SetInitialSize(wx.Size(500, 1000))
+        self.SetInitialSize(wx.Size(500, 800))
+        self.create_menu()
         self.Show()
+
+    def create_menu(self):
+        menu_bar = wx.MenuBar()
+        file_menu = wx.Menu()
+        new_file_menu_item = file_menu.Append(
+            wx.ID_ANY, "New File", "Create a new file"
+        )
+        open_file_menu_item = file_menu.Append(
+            wx.ID_ANY, "Open...", "Open a file"
+        )
+        save_menu_item = file_menu.Append(
+            wx.ID_ANY, "Save", "Save to current file"
+        )
+        save_as_menu_item = file_menu.Append(
+            wx.ID_ANY, "Save As", "Save file with new name"
+        )
+        menu_bar.Append(file_menu, "&File")
+        self.Bind(
+            event=wx.EVT_MENU,
+            handler=self.on_new_file,
+            source=new_file_menu_item,
+        )
+        self.Bind(
+            event=wx.EVT_MENU,
+            handler=self.on_open_file,
+            source=open_file_menu_item,
+        )
+        self.Bind(
+            event=wx.EVT_MENU,
+            handler=self.on_save,
+            source=save_menu_item,
+        )
+        self.Bind(
+            event=wx.EVT_MENU,
+            handler=self.on_save_as,
+            source=save_as_menu_item,
+        )
+        self.SetMenuBar(menu_bar)
+
+    def on_new_file(self, event):
+        self.transactionManagement.loadTransactions()
+
+    def on_open_file(self, event):
+        dlg = wx.FileDialog(
+            self, message="Choose a file",
+            defaultDir=os.getcwd(),
+            defaultFile="",
+            wildcard=MainFrame.WILDCARD,
+            style=wx.FD_OPEN |
+                  wx.FD_CHANGE_DIR | wx.FD_FILE_MUST_EXIST |
+                  wx.FD_PREVIEW
+            )
+        if dlg.ShowModal() == wx.ID_OK:
+            self.transactionManagement.loadTransactions(dlg.GetPath())
+        dlg.Destroy()
+
+    def on_save(self, event):
+        if self.transactionManagement.file is not None:
+            self.transactionManagement.saveTransactions()
+        else:
+            self.on_save_as(event)
+
+    def on_save_as(self, event):
+        if self.transactionManagement.file is not None:
+            defaultDir = os.path.dirname(self.transactionManagement.file)
+            defaultFile = os.path.basename(self.transactionManagement.file)
+        else:
+            defaultDir = os.getcwd()
+            defaultFile = ""
+        dlg = wx.FileDialog(
+            self, message="Save file as ...", defaultDir=defaultDir,
+            defaultFile=defaultFile, wildcard=MainFrame.WILDCARD, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
+            )
+        if dlg.ShowModal() == wx.ID_OK:
+            self.transactionManagement.saveTransactions(dlg.GetPath())
+        dlg.Destroy()
 
 
 if __name__ == '__main__':
