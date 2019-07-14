@@ -44,6 +44,14 @@ class TransactionStore(object):
                             t.amtOn(requested_date) != 0]
         return transactions
 
+    def getTransactions(self, frequency=None):
+        # TODO: will need to change this when overrides are added
+        # Overrides should not be returned with ONCE
+        if frequency is None:
+            return self.store
+        else:
+            return [t for t in self.store if t.frequency == frequency]
+
     def updateRecurringStartDates(self, new_date):
         recurring_trans = [x for x in self.store
                            if x.frequency != Transaction.ONCE]

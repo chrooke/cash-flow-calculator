@@ -2,6 +2,7 @@
 import unittest
 import time
 import os
+import random
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 import context
@@ -83,6 +84,110 @@ class TestBasicCreate(unittest.TestCase):
 
 
 # READ
+class TestTransactionListRetrieval(unittest.TestCase):
+    def setUp(self):
+        sd = date.today()
+        sd2 = date.today()+timedelta(days=2)
+        self.o1 = Transaction(
+            start=sd,
+            description="Once 1",
+            amount=1.00,
+            frequency=Transaction.ONCE)
+        self.o2 = Transaction(
+            start=sd2,
+            description="Once 2",
+            amount=1.01,
+            frequency=Transaction.ONCE)
+        self.w1 = Transaction(
+            start=sd,
+            description="Weekly 1",
+            amount=1.03,
+            frequency=Transaction.WEEKLY)
+        self.w2 = Transaction(
+            start=sd2,
+            description="Weekly 2",
+            amount=1.04,
+            frequency=Transaction.WEEKLY)
+        self.bw1 = Transaction(
+            start=sd,
+            description="BiWeekly 1",
+            amount=1.05,
+            frequency=Transaction.BIWEEKLY)
+        self.bw2 = Transaction(
+            start=sd2,
+            description="BiWeekly 2",
+            amount=1.06,
+            frequency=Transaction.BIWEEKLY)
+        self.m1 = Transaction(
+            start=sd,
+            description="Monthly 1",
+            amount=1.07,
+            frequency=Transaction.MONTHLY)
+        self.m2 = Transaction(
+            start=sd2,
+            description="Monthly 2",
+            amount=1.08,
+            frequency=Transaction.MONTHLY)
+        self.q1 = Transaction(
+            start=sd,
+            description="Quarterly 1",
+            amount=1.09,
+            frequency=Transaction.QUARTERLY)
+        self.q2 = Transaction(
+            start=sd2,
+            description="Quarterly 2",
+            amount=1.10,
+            frequency=Transaction.QUARTERLY)
+        self.a1 = Transaction(
+            start=sd,
+            description="Annually 1",
+            amount=1.11,
+            frequency=Transaction.ANNUALLY)
+        self.a2 = Transaction(
+            start=sd2,
+            description="Annually 2",
+            amount=1.12,
+            frequency=Transaction.ANNUALLY)
+        self.ts = TransactionStore()
+        self.ts.addTransactions(self.o1, self.o2, self.w1, self.w2,
+                                self.bw1, self.bw2, self.m1, self.m2,
+                                self.q1, self.q2, self.a1, self.a2)
+        random.shuffle(self.ts.store)
+
+    def _transaction_list_test(self, transactions, expected_transactions):
+        assert(len(transactions), len(expected_transactions))
+        for t in expected_transactions:
+            self.assertTrue(t in transactions)
+
+    def test_get_all_transations(self):
+        transactions = self.ts.getTransactions()
+        self._transaction_list_test(transactions, self.ts.store)
+
+    def test_get_one_time_transactions(self):
+        transactions = self.ts.getTransactions(frequency=Transaction.ONCE)
+        self._transaction_list_test(transactions, [self.o1, self.o2])                
+
+    def test_get_weekly_transactions(self):
+        transactions = self.ts.getTransactions(frequency=Transaction.WEEKLY)
+        self._transaction_list_test(transactions, [self.w1, self.w2])
+
+    def test_get_biweekly_transactions(self):
+        transactions = self.ts.getTransactions(frequency=Transaction.BIWEEKLY)
+        self._transaction_list_test(transactions, [self.bw1, self.bw2])
+
+    def test_get_monthly_transactions(self):
+        transactions = self.ts.getTransactions(frequency=Transaction.MONTHLY)
+        self._transaction_list_test(transactions, [self.m1, self.m2])
+
+    def test_get_quarterly_transactions(self):
+        transactions = self.ts.getTransactions(frequency=Transaction.QUARTERLY)
+        self._transaction_list_test(transactions, [self.q1, self.q2])
+
+    def test_get_annual_transactions(self):
+        transactions = self.ts.getTransactions(frequency=Transaction.ANNUALLY)
+        self._transaction_list_test(transactions, [self.a1, self.a2])
+
+
 class TestRetrieveFromMultipleSingleTransactions(unittest.TestCase):
     def setUp(self):
         self.ts = TransactionStore()
