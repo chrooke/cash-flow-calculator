@@ -11,6 +11,7 @@ class Transaction(object):
     MONTHLY = "M"
     QUARTERLY = "Q"
     ANNUALLY = "A"
+    INTERVALS = [ ONCE, WEEKLY, BIWEEKLY, MONTHLY, QUARTERLY, ANNUALLY ]
 
     def __init__(self,
                  start=date.today(),
