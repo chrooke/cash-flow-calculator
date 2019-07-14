@@ -9,26 +9,9 @@ from cash_flow.cash_flow import CashFlow
 
 class TransactionManagement(wx.Panel):
     def __init__(self, parent):
-
-        # Test transactions
-        t1 = Transaction(
-            start=date.today(),
-            description="Once, today",
-            amount=1.00,
-            frequency=Transaction.ONCE)
-        t2 = Transaction(
-            start=date.today(),
-            original_start=date.today()-timedelta(days=1),
-            end=date.today()+timedelta(days=56),
-            description="Weekly",
-            amount=1.02,
-            frequency=Transaction.WEEKLY,
-            skip=set([date.today()+timedelta(days=7)]),
-            scheduled=True,
-            cleared=True)
-        self.t_list = [t1, t2]
-
         super().__init__(parent)
+
+        self.transactions = TransactionStore()
 
         self.editPane1 = None 
         self.transaction_buttons = {}
@@ -39,7 +22,7 @@ class TransactionManagement(wx.Panel):
         )
         self.t_list_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        for t in self.t_list:
+        for t in self.transactions.store:
             self.updateButtonForTransaction(t)
 
         self.left_side_sizer.Add(self.t_list_sizer,0)
@@ -79,8 +62,8 @@ class TransactionManagement(wx.Panel):
                 btn.Bind(wx.EVT_BUTTON, lambda evt, trans=t: self.editTransaction(evt, trans))
                 self.t_list_sizer.Add(btn, 0)
                 self.transaction_buttons[t] = btn
-            if t not in self.t_list:
-                self.t_list.append(t)
+            if t not in self.transactions.store:
+                self.transactions.store.append(t)
             self.t_list_sizer.Layout()
 
 
@@ -88,14 +71,6 @@ class EditTransactionPanel(wx.Panel):
     def __init__(self, parent, trans):
         super().__init__(parent)
         self.parent = parent
-        self.recurrence_choices = [
-            Transaction.ONCE,
-            Transaction.WEEKLY,
-            Transaction.BIWEEKLY,
-            Transaction.MONTHLY,
-            Transaction.QUARTERLY,
-            Transaction.ANNUALLY
-        ]
 
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -122,12 +97,12 @@ class EditTransactionPanel(wx.Panel):
         row_sizer.Add(self.amount, 1, wx.ALL, 5)
         self.main_sizer.Add(row_sizer, 0)
 
-        # Recurrence
-        label = wx.StaticText(self, label='Recurrence', size=(50, -1))
-        self.recurrence = wx.Choice(self, choices=self.recurrence_choices)
+        # Frequency
+        label = wx.StaticText(self, label='Frequency', size=(50, -1))
+        self.frequency = wx.Choice(self, choices=Transaction.INTERVALS)
         row_sizer = wx.BoxSizer(wx.HORIZONTAL)
         row_sizer.Add(label, 0, wx.ALL, 5)
-        row_sizer.Add(self.recurrence, 1, wx.ALL, 5)
+        row_sizer.Add(self.frequency, 1, wx.ALL, 5)
         self.main_sizer.Add(row_sizer, 0)
 
         #Scheduled
@@ -165,7 +140,7 @@ class EditTransactionPanel(wx.Panel):
         tdate = wx.DateTime(self.transaction.start.day, self.transaction.start.month-1, self.transaction.start.year)
         self.start.SetValue(tdate)
         self.amount.SetValue(str(self.transaction.amount))
-        self.recurrence.SetSelection(self.recurrence_choices.index(self.transaction.frequency))
+        self.frequency.SetSelection(Transaction.INTERVALS.index(self.transaction.frequency))
         self.scheduled.SetValue(self.transaction.scheduled)
         self.cleared.SetValue(self.transaction.cleared)
 
@@ -181,7 +156,7 @@ class EditTransactionPanel(wx.Panel):
         new_date = date(wxDate.GetYear(), wxDate.GetMonth()+1, wxDate.GetDay())
         self.transaction.updateStartDate(new_date)
         self.transaction.amount = self.amount.GetValue()
-        self.transaction.frequency = self.recurrence_choices[self.recurrence.GetCurrentSelection()]
+        self.transaction.frequency = Transaction.INTERVALS[self.frequency.GetCurrentSelection()]
         self.transaction.scheduled = self.scheduled.GetValue()
         self.transaction.cleared = self.cleared.GetValue()
         self.parent.updateButtonForTransaction(self.transaction)
