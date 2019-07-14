@@ -19,7 +19,7 @@ class TestConstructor(unittest.TestCase):
         self.assertIsInstance(cf.start_balance, float)
         self.assertEqual(cf.start_balance, sb)
         self.assertIsInstance(cf.transaction_store, TransactionStore)
-        self.assertEqual(len(cf.transaction_store.store), 0)
+        self.assertEqual(len(cf.transaction_store.getTransactions()), 0)
         self.assertIsInstance(cf.current_date, date)
         self.assertEqual(cf.current_date, sd)
         self.assertIsInstance(cf.current_balance, float)

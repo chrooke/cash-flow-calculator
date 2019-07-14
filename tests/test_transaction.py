@@ -20,7 +20,7 @@ class TestConstructor(unittest.TestCase):
         self.assertTrue(Transaction.WEEKLY in Transaction.INTERVALS)
         self.assertTrue(Transaction.BIWEEKLY in Transaction.INTERVALS)
         self.assertTrue(Transaction.MONTHLY in Transaction.INTERVALS)
-        self.assertTrue(Transaction.QUARTERLY in Transaction.INTERVALS)        
+        self.assertTrue(Transaction.QUARTERLY in Transaction.INTERVALS)
         self.assertTrue(Transaction.ANNUALLY in Transaction.INTERVALS)
 
     def test_constructor_empty(self):

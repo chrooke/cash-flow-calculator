@@ -17,7 +17,7 @@ class CashFlow(object):
     def getTodaysTransactions(self):
         while(True):
             daily_transactions = []
-            for trans in self.transaction_store.store:
+            for trans in self.transaction_store.getTransactions():
                 amt = trans.amtOn(self.current_date)
                 if amt != 0:
                     daily_transactions.append(trans)

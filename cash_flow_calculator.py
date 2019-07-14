@@ -11,21 +11,20 @@ class TransactionManagement(wx.Panel):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.transactions = TransactionStore()
+        self.ts = TransactionStore()
 
-        self.editPane1 = None 
+        self.editPane1 = None
         self.transaction_buttons = {}
 
         self.main_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.left_side_sizer = wx.BoxSizer(wx.VERTICAL
-        )
+        self.left_side_sizer = wx.BoxSizer(wx.VERTICAL)
         self.t_list_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        for t in self.transactions.store:
+        for t in self.ts.getTransactions():
             self.updateButtonForTransaction(t)
 
-        self.left_side_sizer.Add(self.t_list_sizer,0)
+        self.left_side_sizer.Add(self.t_list_sizer, 0)
         btn = wx.Button(self, label='New Transaction')
         btn.Bind(wx.EVT_BUTTON, self.newTransaction)
         self.left_side_sizer.Add(btn, 0)
@@ -49,22 +48,22 @@ class TransactionManagement(wx.Panel):
         self.main_sizer.Layout()
 
     def newTransaction(self, event):
-        t=Transaction()
+        t = Transaction()
         self.editTransaction(event, t)
 
     def updateButtonForTransaction(self, t):
-            label = f'{t.description} {t.amount} {t.start}'
-            if t in self.transaction_buttons:
-                btn = self.transaction_buttons[t]
-                btn.SetLabel(label)
-            else:
-                btn = wx.Button(self, label=label)
-                btn.Bind(wx.EVT_BUTTON, lambda evt, trans=t: self.editTransaction(evt, trans))
-                self.t_list_sizer.Add(btn, 0)
-                self.transaction_buttons[t] = btn
-            if t not in self.transactions.store:
-                self.transactions.store.append(t)
-            self.t_list_sizer.Layout()
+        label = f'{t.description} {t.amount} {t.start}'
+        if t in self.transaction_buttons:
+            btn = self.transaction_buttons[t]
+            btn.SetLabel(label)
+        else:
+            btn = wx.Button(self, label=label)
+            btn.Bind(wx.EVT_BUTTON, lambda evt, trans=t: self.editTransaction(evt, trans))
+            self.t_list_sizer.Add(btn, 0)
+            self.transaction_buttons[t] = btn
+        if t not in self.ts.getTransactions():
+            self.ts.addTransactions(t)
+        self.t_list_sizer.Layout()
 
 
 class EditTransactionPanel(wx.Panel):
@@ -76,7 +75,7 @@ class EditTransactionPanel(wx.Panel):
 
         self.transaction = trans
 
-        #Description
+        # Description
 
         self.description = wx.TextCtrl(self)
         self.main_sizer.Add(self.description, 0, wx.EXPAND)
@@ -105,13 +104,13 @@ class EditTransactionPanel(wx.Panel):
         row_sizer.Add(self.frequency, 1, wx.ALL, 5)
         self.main_sizer.Add(row_sizer, 0)
 
-        #Scheduled
-        self.scheduled = wx.CheckBox(self, label='Scheduled', style=wx.CHK_2STATE|wx.ALIGN_RIGHT)
-        self.main_sizer.Add(self.scheduled, 0)   
+        # Scheduled
+        self.scheduled = wx.CheckBox(self, label='Scheduled', style=wx.CHK_2STATE | wx.ALIGN_RIGHT)
+        self.main_sizer.Add(self.scheduled, 0)
 
-        #Cleared
-        self.cleared = wx.CheckBox(self, label='Cleared', style=wx.CHK_2STATE|wx.ALIGN_RIGHT)
-        self.main_sizer.Add(self.cleared, 0)     
+        # Cleared
+        self.cleared = wx.CheckBox(self, label='Cleared', style=wx.CHK_2STATE | wx.ALIGN_RIGHT)
+        self.main_sizer.Add(self.cleared, 0)
 
         # Action Buttons
         action_button_sizer = wx.BoxSizer()
@@ -133,7 +132,6 @@ class EditTransactionPanel(wx.Panel):
         self.setValues()
 
         self.SetSizer(self.main_sizer)
-
 
     def setValues(self):
         self.description.SetValue(self.transaction.description)
@@ -163,11 +161,12 @@ class EditTransactionPanel(wx.Panel):
         self.parent.clearEditPane()
 
 
-class MainFrame(wx.Frame):    
+class MainFrame(wx.Frame):
     def __init__(self):
         super().__init__(parent=None, title='Cash Flow Calculator')
         self.transactionManagement = TransactionManagement(self)
         self.Show()
+
 
 if __name__ == '__main__':
     app = wx.App()

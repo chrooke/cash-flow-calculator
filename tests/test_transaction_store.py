@@ -155,7 +155,7 @@ class TestTransactionListRetrieval(unittest.TestCase):
         random.shuffle(self.ts.store)
 
     def _transaction_list_test(self, transactions, expected_transactions):
-        assert(len(transactions), len(expected_transactions))
+        self.assertEqual(len(transactions), len(expected_transactions))
         for t in expected_transactions:
             self.assertTrue(t in transactions)
 
@@ -165,7 +165,7 @@ class TestTransactionListRetrieval(unittest.TestCase):
 
     def test_get_one_time_transactions(self):
         transactions = self.ts.getTransactions(frequency=Transaction.ONCE)
-        self._transaction_list_test(transactions, [self.o1, self.o2])                
+        self._transaction_list_test(transactions, [self.o1, self.o2])
 
     def test_get_weekly_transactions(self):
         transactions = self.ts.getTransactions(frequency=Transaction.WEEKLY)
