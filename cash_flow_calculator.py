@@ -249,7 +249,7 @@ class EditTransactionPanel(wx.Panel):
         self.transaction.description = self.description.GetValue()
         self.transaction.original_start = wxDate2pyDate(self.orig_start.GetValue())
         self.transaction.start = wxDate2pyDate(self.start.GetValue())
-        self.transaction.amount = self.amount.GetValue()
+        self.transaction.updateAmount(self.amount.GetValue())
         self.transaction.frequency = Transaction.INTERVALS[self.frequency.GetCurrentSelection()]
         self.transaction.scheduled = self.scheduled.GetValue()
         self.transaction.cleared = self.cleared.GetValue()

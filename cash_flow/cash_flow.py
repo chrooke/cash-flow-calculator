@@ -4,15 +4,16 @@ from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 from cash_flow.transaction import Transaction
 from cash_flow.transaction_store import TransactionStore
+from cash_flow.money import Money
 
 
 class CashFlow(object):
     def __init__(self, start_date, start_balance, transaction_store):
         self.start_date = start_date
-        self.start_balance = float(start_balance)
+        self.start_balance = Money(start_balance)
         self.transaction_store = transaction_store
         self.current_date = start_date
-        self.current_balance = float(start_balance)
+        self.current_balance = Money(start_balance)
 
     def getTodaysTransactions(self):
         while(True):

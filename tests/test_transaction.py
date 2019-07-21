@@ -1,9 +1,11 @@
 #!/bin/env python
 import unittest
+from decimal import Decimal
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 import context
 from cash_flow.transaction import Transaction
+from cash_flow.money import Money
 
 
 class TestConstructor(unittest.TestCase):
@@ -34,8 +36,8 @@ class TestConstructor(unittest.TestCase):
                           f"end not None: {t.end}")
         self.assertIsInstance(t.description, str)
         self.assertEqual(t.description, "<Description>")
-        self.assertIsInstance(t.amount, float)
-        self.assertEqual(t.amount, 0.0)
+        self.assertIsInstance(t.amount, Money)
+        self.assertEqual(Decimal(repr(t.amount)), Decimal(0.0))
         self.assertIsInstance(t.frequency, str)
         self.assertEqual(t.frequency, Transaction.ONCE)
         self.assertIsInstance(t.skip, set)
@@ -73,8 +75,8 @@ class TestConstructor(unittest.TestCase):
         self.assertEqual(t.end, end)
         self.assertIsInstance(t.description, str)
         self.assertEqual(t.description, descr)
-        self.assertIsInstance(t.amount, float)
-        self.assertEqual(t.amount, amt)
+        self.assertIsInstance(t.amount, Money)
+        self.assertEqual(Decimal(repr(t.amount)), Decimal(amt))
         self.assertIsInstance(t.frequency, str)
         self.assertEqual(t.frequency, freq)
         self.assertIsInstance(t.skip, set)
@@ -106,7 +108,7 @@ class TestDuplicateTransaction(unittest.TestCase):
         self.assertEqual(self.t1.original_start, t2.original_start)
         self.assertEqual(self.t1.end, t2.end)
         self.assertEqual(self.t1.description, t2.description)
-        self.assertEqual(self.t1.amount, t2.amount)
+        self.assertEqual(repr(self.t1.amount), repr(t2.amount))
         self.assertEqual(self.t1.frequency, t2.frequency)
         self.assertEqual(self.t1.skip.symmetric_difference(t2.skip), set())
         self.assertEqual(self.t1.scheduled, t2.scheduled)
@@ -121,22 +123,22 @@ class TestRecurrence(unittest.TestCase):
                          gap2_start, gap2_end,
                          final_date, final_value):
         amt = t.amtOn(start_date)
-        self.assertIs(type(amt), float)
-        self.assertEqual(amt, start_value)
+        self.assertIs(type(amt), Money)
+        self.assertEqual(repr(amt), repr(start_value))
 
         for i in range(1, gap1_end):
             amt = t.amtOn(start_date+timedelta(days=i))
-            self.assertIs(type(amt), float)
-            self.assertEqual(amt, 0)
+            self.assertIs(type(amt), Money)
+            self.assertEqual(Decimal(repr(amt)), Decimal(0.0))
 
         amt = t.amtOn(middle_date)
-        self.assertIs(type(amt), float)
-        self.assertEqual(amt, middle_value)
+        self.assertIs(type(amt), Money)
+        self.assertEqual(repr(amt), repr(middle_value))
 
         for i in range(gap2_start, gap2_end):
             amt = t.amtOn(start_date+timedelta(days=i))
-            self.assertIs(type(amt), float)
-            self.assertEqual(amt, 0)
+            self.assertIs(type(amt), Money)
+            self.assertEqual(Decimal(repr(amt)), Decimal(0.0))
 
 
 class TestWeeklyRecurrence(TestRecurrence):
@@ -168,14 +170,14 @@ class TestWeeklyRecurrence(TestRecurrence):
                               self.nw_days,
                               self.nw, self.t.amount,
                               self.nwp1_days, self.wan_days,
-                              self.wan, 0)
+                              self.wan, Money(0))
 
     def test_recurrence_with_skip(self):
         self.t.skip.add(self.nw)
         self.assertRecurrence(self.t,
                               self.sd, self.t.amount,
                               self.nw_days,
-                              self.nw, 0,
+                              self.nw, Money(0),
                               self.nwp1_days, self.wan_days,
                               self.wan, self.t.amount)
 
@@ -209,14 +211,14 @@ class TestBiweeklyRecurrence(TestRecurrence):
                               self.nbw_days,
                               self.nbw, self.t.amount,
                               self.nbwp1_days, self.bwan_days,
-                              self.bwan, 0)
+                              self.bwan, Money(0))
 
     def test_recurrence_with_skip(self):
         self.t.skip.add(self.nbw)
         self.assertRecurrence(self.t,
                               self.sd, self.t.amount,
                               self.nbw_days,
-                              self.nbw, 0,
+                              self.nbw, Money(0),
                               self.nbwp1_days, self.bwan_days,
                               self.bwan, self.t.amount)
 
@@ -250,14 +252,14 @@ class TestMonthlyRecurrence(TestRecurrence):
                               self.nm_days,
                               self.nm, self.t.amount,
                               self.nmp1_days, self.man_days,
-                              self.man, 0)
+                              self.man, Money(0))
 
     def test_recurrence_with_skip(self):
         self.t.skip.add(self.nm)
         self.assertRecurrence(self.t,
                               self.sd, self.t.amount,
                               self.nm_days,
-                              self.nm, 0,
+                              self.nm, Money(0),
                               self.nmp1_days, self.man_days,
                               self.man, self.t.amount)
 
@@ -291,14 +293,14 @@ class TestQuarterlyRecurrence(TestRecurrence):
                               self.nq_days,
                               self.nq, self.t.amount,
                               self.nqp1_days, self.qan_days,
-                              self.qan, 0)
+                              self.qan, Money(0))
 
     def test_recurrence_with_skip(self):
         self.t.skip.add(self.nq)
         self.assertRecurrence(self.t,
                               self.sd, self.t.amount,
                               self.nq_days,
-                              self.nq, 0,
+                              self.nq, Money(0),
                               self.nqp1_days, self.qan_days,
                               self.qan, self.t.amount)
 
@@ -332,14 +334,14 @@ class TestAnnualRecurrence(TestRecurrence):
                               self.ny_days,
                               self.ny, self.t.amount,
                               self.nyp1_days, self.yan_days,
-                              self.yan, 0)
+                              self.yan, Money(0))
 
     def test_recurrence_with_skip(self):
         self.t.skip.add(self.ny)
         self.assertRecurrence(self.t,
                               self.sd, self.t.amount,
                               self.ny_days,
-                              self.ny, 0,
+                              self.ny, Money(0),
                               self.nyp1_days, self.yan_days,
                               self.yan, self.t.amount)
 
@@ -363,13 +365,13 @@ class TestOneTimeTransactionHits(unittest.TestCase):
 
     def test_start_date_hits(self):
         self.assertEqual(self.t1.amtOn(self.sd), self.t1.amount)
-        self.assertEqual(self.t1.amtOn(self.sdp1), 0)
+        self.assertEqual(self.t1.amtOn(self.sdp1), Money(0))
 
     def test_date_after_start_date_hits(self):
-        self.assertEqual(self.t2.amtOn(self.sd), 0)
-        self.assertEqual(self.t2.amtOn(self.sdp1), 0)
+        self.assertEqual(self.t2.amtOn(self.sd), Money(0))
+        self.assertEqual(self.t2.amtOn(self.sdp1), Money(0))
         self.assertEqual(self.t2.amtOn(self.sdp2), self.t2.amount)
-        self.assertEqual(self.t2.amtOn(self.sdp3), 0)
+        self.assertEqual(self.t2.amtOn(self.sdp3), Money(0))
 
 
 class TestStartDateChange(unittest.TestCase):
@@ -413,6 +415,26 @@ class TestStartDateChange(unittest.TestCase):
 
         self.assertEqual(self.t2.start, new_start)
         self.assertEqual(self.t2.original_start, self.sd)
+
+
+class TestUpdateAmount(unittest.TestCase):
+    def setUp(self):
+        self.t = Transaction(
+            start=date.today,
+            description="Test",
+            amount=1.02)
+
+    def test_update_with_money(self):
+        self.t.updateAmount(Money(3.50))
+        self.assertEqual(Decimal(repr(self.t.amount)), Decimal(3.50))
+
+    def test_update_with_float(self):
+        self.t.updateAmount(3.50)
+        self.assertEqual(Decimal(repr(self.t.amount)), Decimal(3.50))
+
+    def test_update_with_string(self):
+        self.t.updateAmount('3.50')
+        self.assertEqual(Decimal(repr(self.t.amount)), Decimal(3.50))
 
 
 if __name__ == '__main__':

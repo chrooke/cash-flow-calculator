@@ -6,6 +6,7 @@ import context
 from cash_flow.transaction import Transaction
 from cash_flow.transaction_store import TransactionStore
 from cash_flow.cash_flow import CashFlow
+from cash_flow.money import Money
 
 
 class TestConstructor(unittest.TestCase):
@@ -16,14 +17,14 @@ class TestConstructor(unittest.TestCase):
         cf = CashFlow(sd, sb, ts)
         self.assertIsInstance(cf.start_date, date)
         self.assertEqual(cf.start_date, sd)
-        self.assertIsInstance(cf.start_balance, float)
-        self.assertEqual(cf.start_balance, sb)
+        self.assertIsInstance(cf.start_balance, Money)
+        self.assertEqual(cf.start_balance, Money(sb))
         self.assertIsInstance(cf.transaction_store, TransactionStore)
         self.assertEqual(len(cf.transaction_store.getTransactions()), 0)
         self.assertIsInstance(cf.current_date, date)
         self.assertEqual(cf.current_date, sd)
-        self.assertIsInstance(cf.current_balance, float)
-        self.assertEqual(cf.current_balance, sb)
+        self.assertIsInstance(cf.current_balance, Money)
+        self.assertEqual(cf.current_balance, Money(sb))
 
     def test_contructor_string_balance(self):
         sd = date.today()
@@ -32,14 +33,14 @@ class TestConstructor(unittest.TestCase):
         cf = CashFlow(sd, sb, ts)
         self.assertIsInstance(cf.start_date, date)
         self.assertEqual(cf.start_date, sd)
-        self.assertIsInstance(cf.start_balance, float)
-        self.assertEqual(cf.start_balance, float(sb))
+        self.assertIsInstance(cf.start_balance, Money)
+        self.assertEqual(cf.start_balance, Money(sb))
         self.assertIsInstance(cf.transaction_store, TransactionStore)
         self.assertEqual(len(cf.transaction_store.getTransactions()), 0)
         self.assertIsInstance(cf.current_date, date)
         self.assertEqual(cf.current_date, sd)
-        self.assertIsInstance(cf.current_balance, float)
-        self.assertEqual(cf.current_balance, float(sb))
+        self.assertIsInstance(cf.current_balance, Money)
+        self.assertEqual(cf.current_balance, Money(sb))
 
 
 class TestGenerator(unittest.TestCase):

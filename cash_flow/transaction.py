@@ -2,6 +2,7 @@
 
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
+from cash_flow.money import Money
 
 
 class Transaction(object):
@@ -29,7 +30,7 @@ class Transaction(object):
         self.original_start = original_start
         self.end = end
         self.description = description
-        self.amount = amount
+        self.amount = Money(amount)
         if frequency is None:
             frequency = Transaction.ONCE
         self.frequency = frequency
@@ -44,13 +45,13 @@ class Transaction(object):
         while(True):
             if date not in self.skip:
                 if date == trans_date:
-                    return float(self.amount)
+                    return self.amount
                 if date > trans_date:
-                    return 0.0
+                    return Money(0)
                 if self.end and trans_date > self.end:
-                    return 0.0
+                    return Money(0)
                 if self.frequency == Transaction.ONCE:
-                    return 0.0
+                    return Money(0)
             date = self._step_to_next_date(date)
 
     def updateStartDate(self, base_date):
@@ -61,6 +62,11 @@ class Transaction(object):
             while date < base_date:
                 date = self._step_to_next_date(date)
         self.start = date
+
+    def updateAmount(self, amount):
+        if type(amount) is not Money:
+            amount = Money(amount)
+        self.amount = amount
 
     def duplicate(self):
         return Transaction(
