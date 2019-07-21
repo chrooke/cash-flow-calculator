@@ -31,7 +31,7 @@ class CashFlowDisplay(wx.Panel):
         self.main_sizer.Add(self.control_sizer, 0)
         # List of transactions
         self.list_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.main_sizer.Add(self.list_sizer, 0)
+        self.main_sizer.Add(self.list_sizer, 0, wx.EXPAND)
         self.SetSizer(self.main_sizer)
         self.updateList()
 
@@ -45,12 +45,34 @@ class CashFlowDisplay(wx.Panel):
         cf = CashFlow(start_date, starting_balance, self.ts)
         day = cf.getTodaysTransactions()
         self.list_sizer.Clear(delete_windows=True)
-        for i in range(0, 31):
+        listCtrl = wx.ListCtrl(self, style=wx.LC_REPORT)
+        listCtrl.InsertColumn(0, "Date")
+        listCtrl.InsertColumn(1, "Balance")
+        listCtrl.InsertColumn(2, "Transaction")
+        listCtrl.InsertColumn(3, "Amount")
+        listCtrl.SetColumnWidth(0, 100)
+        listCtrl.SetColumnWidth(1, 100)
+        listCtrl.SetColumnWidth(2, 200)
+        listCtrl.SetColumnWidth(3, 75)
+        for i in range(0, 365):
             (d, bal, t_list) = next(day)
-            for t in t_list:
-                label = f'{d} {t.description} {t.amount} {bal}'
-                txt = wx.StaticText(self, label=label)
-                self.list_sizer.Add(txt,0)
+            if t_list:
+                # Add daily summary
+                index = listCtrl.InsertItem(listCtrl.GetItemCount(), str(d))
+                listCtrl.SetItem(index, 1, str(bal))
+                if bal < 100:
+                    listCtrl.SetItemBackgroundColour(index, wx.Colour(255, 255, 0))
+                if bal < 0:
+                    listCtrl.SetItemBackgroundColour(index, wx.Colour(255, 0, 0))
+                # Add individual transactions
+                for t in t_list:
+                    index = listCtrl.InsertItem(listCtrl.GetItemCount(), "")
+                    listCtrl.SetItem(index, 2, str(t.description))
+                    listCtrl.SetItem(index, 3, str(t.amount))                 
+                    # label = f'{d} {t.description} {t.amount} {bal}'
+                    # txt = wx.StaticText(self, label=label)
+                    # self.list_sizer.Add(txt,0)
+        self.list_sizer.Add(listCtrl, 0, wx.EXPAND)
         self.main_sizer.Layout()
 
 
@@ -237,7 +259,7 @@ class MainFrame(wx.Frame):
         self.notebook.AddPage(self.transactionManagement, "Transaction Management")
         self.cashFlowDisplay = CashFlowDisplay(self.notebook, self.ts)
         self.notebook.AddPage(self.cashFlowDisplay, "Cash Flow")
-        self.SetInitialSize(wx.Size(500, 800))
+        self.SetInitialSize(wx.Size(500, 650))
         self.create_menu()
         self.Show()
 
