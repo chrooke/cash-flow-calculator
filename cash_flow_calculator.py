@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import os
+import string
+import re
 import wx
 import wx.adv
 from datetime import date, timedelta
@@ -42,6 +44,8 @@ class CashFlowDisplay(wx.Panel):
         wxDate = self.date_picker.GetValue()
         start_date = date(wxDate.GetYear(), wxDate.GetMonth()+1, wxDate.GetDay())
         starting_balance = self.starting_balance.GetValue()
+        allow = string.digits + "."
+        starting_balance = re.sub('[^%s]' % allow, '', starting_balance)
         cf = CashFlow(start_date, starting_balance, self.ts)
         day = cf.getTodaysTransactions()
         self.list_sizer.Clear(delete_windows=True)
@@ -152,8 +156,16 @@ class EditTransactionPanel(wx.Panel):
         self.description = wx.TextCtrl(self)
         self.main_sizer.Add(self.description, 0, wx.EXPAND)
 
-        # Date
-        label = wx.StaticText(self, label='Date', size=(50, -1))
+        # Original Start Date
+        label = wx.StaticText(self, label='Original Start Date', size=(50, -1))
+        self.orig_start = wx.adv.DatePickerCtrl(self)
+        row_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        row_sizer.Add(label, 0, wx.ALL, 5)
+        row_sizer.Add(self.orig_start, 1, wx.ALL, 5)
+        self.main_sizer.Add(row_sizer, 0)
+
+        # Current Start Date
+        label = wx.StaticText(self, label='Current Start Date', size=(50, -1))
         self.start = wx.adv.DatePickerCtrl(self)
         row_sizer = wx.BoxSizer(wx.HORIZONTAL)
         row_sizer.Add(label, 0, wx.ALL, 5)
@@ -215,8 +227,10 @@ class EditTransactionPanel(wx.Panel):
 
     def setValues(self):
         self.description.SetValue(self.transaction.description)
-        tdate = wx.DateTime(self.transaction.start.day, self.transaction.start.month-1, self.transaction.start.year)
-        self.start.SetValue(tdate)
+        osd = wx.DateTime(self.transaction.original_start.day, self.transaction.original_start.month-1, self.transaction.original_start.year)
+        self.orig_start.SetValue(osd)
+        sd = wx.DateTime(self.transaction.start.day, self.transaction.start.month-1, self.transaction.start.year)
+        self.start.SetValue(sd)
         self.amount.SetValue(str(self.transaction.amount))
         self.frequency.SetSelection(Transaction.INTERVALS.index(self.transaction.frequency))
         self.scheduled.SetValue(self.transaction.scheduled)
@@ -232,7 +246,8 @@ class EditTransactionPanel(wx.Panel):
         self.transaction.description = self.description.GetValue()
         wxDate = self.start.GetValue()
         new_date = date(wxDate.GetYear(), wxDate.GetMonth()+1, wxDate.GetDay())
-        self.transaction.updateStartDate(new_date)
+        self.transaction.original_start = new_date
+        self.transaction.start = new_date
         self.transaction.amount = self.amount.GetValue()
         self.transaction.frequency = Transaction.INTERVALS[self.frequency.GetCurrentSelection()]
         self.transaction.scheduled = self.scheduled.GetValue()
@@ -259,7 +274,7 @@ class MainFrame(wx.Frame):
         self.notebook.AddPage(self.transactionManagement, "Transaction Management")
         self.cashFlowDisplay = CashFlowDisplay(self.notebook, self.ts)
         self.notebook.AddPage(self.cashFlowDisplay, "Cash Flow")
-        self.SetInitialSize(wx.Size(500, 650))
+        self.SetInitialSize(wx.Size(650, 650))
         self.create_menu()
         self.Show()
 
