@@ -13,16 +13,45 @@ class CashFlowDisplay(wx.Panel):
         super().__init__(parent)
         self.ts = ts
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
+        # Controls at top
+        self.control_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        label = wx.StaticText(self, label='Starting Date')
+        self.control_sizer.Add(label, 0)
+        d = date.today()
+        wxDate = wx.DateTime(d.day, d.month-1, d.year)
+        self.date_picker = wx.adv.DatePickerCtrl(self)
+        self.date_picker.SetValue(wxDate)
+        self.date_picker.Bind(wx.adv.EVT_DATE_CHANGED, self.handleStartingInfoChange)   
+        self.control_sizer.Add(self.date_picker, 0)
+        label = wx.StaticText(self, label="Starting Balance $")
+        self.control_sizer.Add(label, 0)
+        self.starting_balance = wx.TextCtrl(self, value="0.00")
+        self.starting_balance.Bind(wx.EVT_TEXT, self.handleStartingInfoChange)        
+        self.control_sizer.Add(self.starting_balance, 0)
+        self.main_sizer.Add(self.control_sizer, 0)
+        # List of transactions
+        self.list_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.main_sizer.Add(self.list_sizer, 0)
         self.SetSizer(self.main_sizer)
-        self.tempDrawSomething()
+        self.updateList()
 
-    def tempDrawSomething(self):
-        self.main_sizer.Clear()
-        for t in self.ts.getTransactions():
-            label = f'{t.description} {t.amount} {t.start}'
-            txt = wx.StaticText(self, label=label)
-            self.main_sizer.Add(txt,0)
-            self.main_sizer.Layout()
+    def handleStartingInfoChange(self, event):
+        self.updateList()
+
+    def updateList(self):
+        wxDate = self.date_picker.GetValue()
+        start_date = date(wxDate.GetYear(), wxDate.GetMonth()+1, wxDate.GetDay())
+        starting_balance = self.starting_balance.GetValue()
+        cf = CashFlow(start_date, starting_balance, self.ts)
+        day = cf.getTodaysTransactions()
+        self.list_sizer.Clear(delete_windows=True)
+        for i in range(0, 31):
+            (d, bal, t_list) = next(day)
+            for t in t_list:
+                label = f'{d} {t.description} {t.amount} {bal}'
+                txt = wx.StaticText(self, label=label)
+                self.list_sizer.Add(txt,0)
+        self.main_sizer.Layout()
 
 
 class TransactionManagement(wx.Panel):
@@ -54,9 +83,7 @@ class TransactionManagement(wx.Panel):
             self.main_sizer.Layout()
 
     def rebuildTransactionButtons(self):
-        self.t_list_sizer.Clear()
-        for t in self.transaction_buttons:
-            self.transaction_buttons[t].Destroy()
+        self.t_list_sizer.Clear(delete_windows=True)
         self.transaction_buttons = {}
         for t in self.ts.getTransactions():
             self.updateButtonForTransaction(t)
@@ -220,7 +247,7 @@ class MainFrame(wx.Frame):
 
     def updateChildren(self):
         self.transactionManagement.redraw()
-        self.cashFlowDisplay.tempDrawSomething()
+        self.cashFlowDisplay.updateList()
 
     def create_menu(self):
         menu_bar = wx.MenuBar()
