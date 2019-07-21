@@ -10,6 +10,13 @@ from cash_flow.transaction_store import TransactionStore
 from cash_flow.cash_flow import CashFlow
 
 
+def wxDate2pyDate(wxdate):
+    return date(wxdate.GetYear(), wxdate.GetMonth()+1, wxdate.GetDay())
+
+def pyDate2wxDate(pyDate):
+    return wx.DateTime(pyDate.day, pyDate.month-1, pyDate.year)
+
+
 class CashFlowDisplay(wx.Panel):
     def __init__(self, parent, ts):
         super().__init__(parent)
@@ -19,8 +26,7 @@ class CashFlowDisplay(wx.Panel):
         self.control_sizer = wx.BoxSizer(wx.HORIZONTAL)
         label = wx.StaticText(self, label='Starting Date')
         self.control_sizer.Add(label, 0)
-        d = date.today()
-        wxDate = wx.DateTime(d.day, d.month-1, d.year)
+        wxDate = pyDate2wxDate(date.today())
         self.date_picker = wx.adv.DatePickerCtrl(self)
         self.date_picker.SetValue(wxDate)
         self.date_picker.Bind(wx.adv.EVT_DATE_CHANGED, self.handleStartingInfoChange)   
@@ -41,8 +47,7 @@ class CashFlowDisplay(wx.Panel):
         self.updateList()
 
     def updateList(self):
-        wxDate = self.date_picker.GetValue()
-        start_date = date(wxDate.GetYear(), wxDate.GetMonth()+1, wxDate.GetDay())
+        start_date = wxDate2pyDate(self.date_picker.GetValue())
         starting_balance = self.starting_balance.GetValue()
         allow = string.digits + "."
         starting_balance = re.sub('[^%s]' % allow, '', starting_balance)
@@ -227,10 +232,8 @@ class EditTransactionPanel(wx.Panel):
 
     def setValues(self):
         self.description.SetValue(self.transaction.description)
-        osd = wx.DateTime(self.transaction.original_start.day, self.transaction.original_start.month-1, self.transaction.original_start.year)
-        self.orig_start.SetValue(osd)
-        sd = wx.DateTime(self.transaction.start.day, self.transaction.start.month-1, self.transaction.start.year)
-        self.start.SetValue(sd)
+        self.orig_start.SetValue(pyDate2wxDate(self.transaction.original_start))
+        self.start.SetValue(pyDate2wxDate(self.transaction.start))
         self.amount.SetValue(str(self.transaction.amount))
         self.frequency.SetSelection(Transaction.INTERVALS.index(self.transaction.frequency))
         self.scheduled.SetValue(self.transaction.scheduled)
@@ -244,10 +247,8 @@ class EditTransactionPanel(wx.Panel):
 
     def saveEdit(self, event):
         self.transaction.description = self.description.GetValue()
-        wxDate = self.start.GetValue()
-        new_date = date(wxDate.GetYear(), wxDate.GetMonth()+1, wxDate.GetDay())
-        self.transaction.original_start = new_date
-        self.transaction.start = new_date
+        self.transaction.original_start = wxDate2pyDate(self.orig_start.GetValue())
+        self.transaction.start = wxDate2pyDate(self.start.GetValue())
         self.transaction.amount = self.amount.GetValue()
         self.transaction.frequency = Transaction.INTERVALS[self.frequency.GetCurrentSelection()]
         self.transaction.scheduled = self.scheduled.GetValue()
