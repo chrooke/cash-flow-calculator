@@ -44,7 +44,7 @@ class Transaction(object):
         while(True):
             if date not in self.skip:
                 if date == trans_date:
-                    return self.amount
+                    return float(self.amount)
                 if date > trans_date:
                     return 0
                 if self.end and trans_date > self.end:

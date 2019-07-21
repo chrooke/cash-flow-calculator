@@ -9,7 +9,7 @@ from cash_flow.cash_flow import CashFlow
 
 
 class TestConstructor(unittest.TestCase):
-    def test_contructor(self):
+    def test_contructor_float_balance(self):
         sd = date.today()
         sb = 100.00
         ts = TransactionStore()
@@ -24,6 +24,22 @@ class TestConstructor(unittest.TestCase):
         self.assertEqual(cf.current_date, sd)
         self.assertIsInstance(cf.current_balance, float)
         self.assertEqual(cf.current_balance, sb)
+
+    def test_contructor_string_balance(self):
+        sd = date.today()
+        sb = '100.00'
+        ts = TransactionStore()
+        cf = CashFlow(sd, sb, ts)
+        self.assertIsInstance(cf.start_date, date)
+        self.assertEqual(cf.start_date, sd)
+        self.assertIsInstance(cf.start_balance, float)
+        self.assertEqual(cf.start_balance, float(sb))
+        self.assertIsInstance(cf.transaction_store, TransactionStore)
+        self.assertEqual(len(cf.transaction_store.getTransactions()), 0)
+        self.assertIsInstance(cf.current_date, date)
+        self.assertEqual(cf.current_date, sd)
+        self.assertIsInstance(cf.current_balance, float)
+        self.assertEqual(cf.current_balance, float(sb))
 
 
 class TestGenerator(unittest.TestCase):

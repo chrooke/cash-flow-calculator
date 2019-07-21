@@ -9,10 +9,10 @@ from cash_flow.transaction_store import TransactionStore
 class CashFlow(object):
     def __init__(self, start_date, start_balance, transaction_store):
         self.start_date = start_date
-        self.start_balance = start_balance
+        self.start_balance = float(start_balance)
         self.transaction_store = transaction_store
         self.current_date = start_date
-        self.current_balance = start_balance
+        self.current_balance = float(start_balance)
 
     def getTodaysTransactions(self):
         while(True):
