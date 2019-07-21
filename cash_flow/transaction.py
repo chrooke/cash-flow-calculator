@@ -46,11 +46,11 @@ class Transaction(object):
                 if date == trans_date:
                     return float(self.amount)
                 if date > trans_date:
-                    return 0
+                    return 0.0
                 if self.end and trans_date > self.end:
-                    return 0
+                    return 0.0
                 if self.frequency == Transaction.ONCE:
-                    return 0
+                    return 0.0
             date = self._step_to_next_date(date)
 
     def updateStartDate(self, base_date):

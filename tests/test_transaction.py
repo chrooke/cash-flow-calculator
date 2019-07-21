@@ -120,15 +120,23 @@ class TestRecurrence(unittest.TestCase):
                          middle_date, middle_value,
                          gap2_start, gap2_end,
                          final_date, final_value):
-        self.assertEqual(t.amtOn(start_date), start_value)
+        amt = t.amtOn(start_date)
+        self.assertIs(type(amt), float)
+        self.assertEqual(amt, start_value)
 
         for i in range(1, gap1_end):
-            self.assertEqual(t.amtOn(start_date+timedelta(days=i)), 0)
+            amt = t.amtOn(start_date+timedelta(days=i))
+            self.assertIs(type(amt), float)
+            self.assertEqual(amt, 0)
 
-        self.assertEqual(t.amtOn(middle_date), middle_value)
+        amt = t.amtOn(middle_date)
+        self.assertIs(type(amt), float)
+        self.assertEqual(amt, middle_value)
 
         for i in range(gap2_start, gap2_end):
-            self.assertEqual(t.amtOn(start_date+timedelta(days=i)), 0)
+            amt = t.amtOn(start_date+timedelta(days=i))
+            self.assertIs(type(amt), float)
+            self.assertEqual(amt, 0)
 
 
 class TestWeeklyRecurrence(TestRecurrence):
