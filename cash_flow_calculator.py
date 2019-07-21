@@ -308,6 +308,7 @@ class MainFrame(wx.Frame):
     def __init__(self):
         super().__init__(parent=None, title='Cash Flow Calculator')
         self.ts = TransactionStore()
+        self.defaultDir = os.getcwd()+'/data'
         self.dataFile = None
         self.notebook = wx.Notebook(self)
         self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.handleNotebookChange)
@@ -371,7 +372,7 @@ class MainFrame(wx.Frame):
     def on_open_file(self, event):
         dlg = wx.FileDialog(
             self, message="Choose a file",
-            defaultDir=os.getcwd(),
+            defaultDir=self.defaultDir,
             defaultFile="",
             wildcard=MainFrame.WILDCARD,
             style=wx.FD_OPEN |
@@ -393,7 +394,7 @@ class MainFrame(wx.Frame):
             defaultDir = os.path.dirname(self.file)
             defaultFile = os.path.basename(self.file)
         else:
-            defaultDir = os.getcwd()
+            defaultDir = self.defaultDir
             defaultFile = ""
         dlg = wx.FileDialog(
             self, message="Save file as ...", defaultDir=defaultDir,
