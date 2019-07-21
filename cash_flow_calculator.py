@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import yaml
 import string
 import re
 import wx
@@ -17,24 +18,42 @@ def pyDate2wxDate(pyDate):
     return wx.DateTime(pyDate.day, pyDate.month-1, pyDate.year)
 
 
+class AppSettings():
+    def __init__(self, startDate=None, startBalance=None, warning=None):
+        if startDate is None:
+            startDate = date.today()
+        self.startDate = startDate
+
+        if startBalance is None:
+            startBalance = '0.00'
+        self.startBalance = startBalance
+
+        if warning is None:
+            warning = 100.00
+        self.warning = warning
+
+
 class CashFlowDisplay(wx.Panel):
     def __init__(self, parent, ts):
         super().__init__(parent)
         self.ts = ts
+        self.settingsFile = os.getcwd()+'/data/'+'.cash_flow_settings.yml'
+        self.settings = AppSettings()
+        self.loadSettings()
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
         # Controls at top
         self.control_sizer = wx.BoxSizer(wx.HORIZONTAL)
         label = wx.StaticText(self, label='Starting Date')
         self.control_sizer.Add(label, 0)
-        wxDate = pyDate2wxDate(date.today())
+        wxDate = pyDate2wxDate(self.settings.startDate)
         self.date_picker = wx.adv.DatePickerCtrl(self)
         self.date_picker.SetValue(wxDate)
-        self.date_picker.Bind(wx.adv.EVT_DATE_CHANGED, self.handleStartingInfoChange)   
+        self.date_picker.Bind(wx.adv.EVT_DATE_CHANGED, self.handleSettingsChange)   
         self.control_sizer.Add(self.date_picker, 0)
         label = wx.StaticText(self, label="Starting Balance $")
         self.control_sizer.Add(label, 0)
-        self.starting_balance = wx.TextCtrl(self, value="0.00")
-        self.starting_balance.Bind(wx.EVT_TEXT, self.handleStartingInfoChange)        
+        self.starting_balance = wx.TextCtrl(self, value=self.settings.startBalance)
+        self.starting_balance.Bind(wx.EVT_TEXT, self.handleSettingsChange)        
         self.control_sizer.Add(self.starting_balance, 0)
         self.main_sizer.Add(self.control_sizer, 0)
         # List of transactions
@@ -43,8 +62,9 @@ class CashFlowDisplay(wx.Panel):
         self.SetSizer(self.main_sizer)
         self.updateList()
 
-    def handleStartingInfoChange(self, event):
+    def handleSettingsChange(self, event):
         self.updateList()
+        self.updateSettings()
 
     def updateList(self):
         start_date = wxDate2pyDate(self.date_picker.GetValue())
@@ -69,7 +89,7 @@ class CashFlowDisplay(wx.Panel):
                 # Add daily summary
                 index = listCtrl.InsertItem(listCtrl.GetItemCount(), str(d))
                 listCtrl.SetItem(index, 1, str(bal))
-                if bal < 100:
+                if bal < self.settings.warning:
                     listCtrl.SetItemBackgroundColour(index, wx.Colour(255, 255, 0))
                 if bal < 0:
                     listCtrl.SetItemBackgroundColour(index, wx.Colour(255, 0, 0))
@@ -83,6 +103,26 @@ class CashFlowDisplay(wx.Panel):
                     # self.list_sizer.Add(txt,0)
         self.list_sizer.Add(listCtrl, 0, wx.EXPAND)
         self.main_sizer.Layout()
+
+    def updateSettings(self):
+        self.settings.startDate = wxDate2pyDate(self.date_picker.GetValue())
+        self.settings.startBalance = self.starting_balance.GetValue()
+        # TODO: set warning once control is exposed
+        self.saveSettings()
+
+    def saveSettings(self):
+        try:
+            with open(self.settingsFile, "w") as f:
+                yaml.dump(self.settings, f)
+        except:
+            print("Can't save settings for some reason.")
+
+    def loadSettings(self):
+        try:
+            with open(self.settingsFile, "r") as f:
+                self.settings = yaml.full_load(f)
+        except:
+            print("Can't load settings file. Using defaults.")
 
 
 class TransactionManagement(wx.Panel):
@@ -268,7 +308,7 @@ class MainFrame(wx.Frame):
     def __init__(self):
         super().__init__(parent=None, title='Cash Flow Calculator')
         self.ts = TransactionStore()
-        self.file = None
+        self.dataFile = None
         self.notebook = wx.Notebook(self)
         self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.handleNotebookChange)
         self.transactionManagement = TransactionManagement(self.notebook, self.ts)
@@ -349,7 +389,7 @@ class MainFrame(wx.Frame):
             self.on_save_as(event)
 
     def on_save_as(self, event):
-        if self.file is not None:
+        if self.dataFile is not None:
             defaultDir = os.path.dirname(self.file)
             defaultFile = os.path.basename(self.file)
         else:
@@ -367,14 +407,14 @@ class MainFrame(wx.Frame):
         self.ts = TransactionStore()
         if file is not None:
             self.ts.loadTransactions(file)
-            self.file = file
+            self.dataFile = file
         self.transactionManagement.ts = self.ts
         self.cashFlowDisplay.ts = self.ts
         self.updateChildren()
 
     def saveTransactions(self, file=None):
         if file is None:
-            file = self.file
+            file = self.dataFile
         self.file = file
         self.ts.saveTransactions(file)
 
