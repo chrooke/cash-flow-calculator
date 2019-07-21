@@ -26,12 +26,18 @@ class TransactionStore(object):
             pass
 
     def saveTransactions(self, file):
-        with open(file, "w") as f:
-            yaml.dump(self.store, f)
+        try:
+            with open(file, "w") as f:
+                yaml.dump(self.store, f)
+        except:
+            print(f"Failed to save transactions to {file}.")
 
     def loadTransactions(self, file):
-        with open(file, "r") as f:
-            self.store = yaml.full_load(f)
+        try:
+            with open(file, "r") as f:
+                self.store = yaml.full_load(f)
+        except:
+            print(f"Failed to load transaction store from {file}.")
 
     def getTransaction(self, description, requested_date=None):
         # Currently does not handle recurring/overridden transactions
