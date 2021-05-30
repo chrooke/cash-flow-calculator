@@ -439,7 +439,7 @@ class MainFrame(wx.Frame):
     def loadSettings(self):
         try:
             with open(self.settingsFile, "r") as f:
-                self.settings = yaml.full_load(f)
+                self.settings = yaml.load(f, Loader=yaml.Loader)
             self.transactionManagement.settings = self.settings
             self.cashFlowDisplay.settings = self.settings
             self.updateChildren()

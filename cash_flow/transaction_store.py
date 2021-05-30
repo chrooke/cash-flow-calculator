@@ -35,7 +35,7 @@ class TransactionStore(object):
     def loadTransactions(self, file):
         try:
             with open(file, "r") as f:
-                self.store = yaml.full_load(f)
+                self.store = yaml.load(f, Loader=yaml.Loader)
         except:
             print(f"Failed to load transaction store from {file}.")
 
